@@ -1,5 +1,7 @@
 import bpy
 from mathutils import Vector
+import numpy
+import itertools
 
 
 ###Various function###
@@ -165,12 +167,51 @@ class animate_all(bpy.types.Operator):
         lamp_list = curr_scene.srti_props.list_lights
         camera_list = curr_scene.srti_props.list_cameras
         value_list = curr_scene.srti_props.list_values
+        object = curr_scene.srti_props.main_object
+        all_values = []
+        material_list = []
 
         tot_light = len(lamp_list)
         tot_cam = len(camera_list)
-          
+        
+        if tot_cam < 1:
+            self.report({'ERROR'}, "There are any cameras in the scene.")
+            return{'FINISHED'}
+
+        if not object:
+            self.report({'WARNING'}, "No object selected for values")
+            tot_comb = 1
+        else:
+            #add value node to all materials enabling nodes fore each
+            global material_list
+            for material_slot in object.material_slots:
+                if material_slot.material:
+                    
+                    material_slot.material.use_nodes = True
+                    node_list=[]
+                    for value in value_list:
+                        node = material_slot.material.node_tree.nodes.new("ShaderNodeValue")
+
+                        node.name = value.name
+                        node.label = value.name
+                        node_list.append(node)
+                    material_list.append(node_list)
+
+            print(material_list)
+
+            #Creation of values array
+            values = curr_scene.srti_props.list_values
+            global all_values
+            for val in values:
+                all_values.append(numpy.linspace(val.min,val.max,val.steps))
+            print (all_values)
+            tot_comb = numpy.prod(list(row.steps for row in values))
+        print("out")
+        print(material_list)
+        print (all_values)
         curr_scene.frame_start = 1
-        curr_scene.frame_end = tot_cam * tot_light
+        curr_scene.frame_end = tot_cam * tot_light * tot_comb
+        #val_combination = list(itertools.product(*all_values))
 
         #Delete animations
         for cam in camera_list:
@@ -183,26 +224,30 @@ class animate_all(bpy.types.Operator):
         curr_scene.timeline_markers.clear()
         
         #TODO loop property
+        for curr_val in itertools.product(*all_values) if object else [0]:
 
-        for cam in camera_list: #loop every camera
-            mark = curr_scene.timeline_markers.new(cam.camera.name, index_prop + index_cam * tot_light + 1) # create a marker
-            mark.camera = cam.camera
-            for lamp in lamp_list: #loop every lamp
-                lamp = lamp.light
-                #animate lamps
-                curr_frame = (index_prop * tot_cam * tot_light) + (index_cam * tot_light) + index_light + 1
-                #hide lamp on theprevious and next frame
-                lamp.hide_render = True
-                lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame - 1)
-                lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame + 1)
-                #rendo visibile la lampada solo nel suo frame
-                lamp.hide_render = False
-                lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame)
+            for cam in camera_list: #loop every camera
+                mark = curr_scene.timeline_markers.new(cam.camera.name, index_prop*tot_cam*tot_light + index_cam * tot_light + 1) # create a marker
+                mark.camera = cam.camera
+                for lamp in lamp_list: #loop every lamp
+                    lamp = lamp.light
+                    #animate lamps
+                    curr_frame = (index_prop * tot_cam * tot_light) + (index_cam * tot_light) + index_light + 1
+                    #hide lamp on theprevious and next frame
+                    lamp.hide_render = True
+                    lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame - 1)
+                    lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame + 1)
+                    #rendo visibile la lampada solo nel suo frame
+                    lamp.hide_render = False
+                    lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame)
 
-                index_light += 1
+                    index_light += 1
 
-            index_cam += 1
-            index_light = 0
+                index_cam += 1
+                index_light = 0
+            
+            index_cam = 0
+            index_prop += 1
             
         return{'FINISHED'}
 
@@ -226,10 +271,81 @@ class create_export_file(bpy.types.Operator):
     def execute(self, context):
         #TODO
         return{'FINISHED'}
+
+# ui list item actions
+class values_UIList(bpy.types.Operator):
+    bl_idname = "srti.values_uilist"
+    bl_label = "Values List"
+
+    action = bpy.props.EnumProperty(
+        items=(
+            ('UP', "Up", ""),
+            ('DOWN', "Down", ""),
+            ('REMOVE', "Remove", ""),
+            ('ADD', "Add", ""),
+        )
+    )
+
+    def invoke(self, context, event):
+
+        scn = context.scene
+        idx = scn.srti_props.selected_value_index
+
+        try:
+            item = scn.srti_props.list_values[idx]
+        except IndexError:
+            pass
+
+        else:
+            if self.action == 'DOWN' and idx < len(scn.srti_props.list_values) - 1:
+                item_next = scn.srti_props.list_values[idx+1].name
+                scn.srti_props.list_values.move(idx, idx + 1)
+                scn.srti_props.selected_value_index += 1
+                info = 'Item %d selected' % (scn.srti_props.selected_value_index + 1)
+                self.report({'INFO'}, info)
+
+            elif self.action == 'UP' and idx >= 1:
+                item_prev = scn.srti_props.list_values[idx-1].name
+                scn.srti_props.list_values.move(idx, idx-1)
+                scn.srti_props.selected_value_index -= 1
+                info = 'Item %d selected' % (scn.srti_props.selected_value_index + 1)
+                self.report({'INFO'}, info)
+
+            elif self.action == 'REMOVE':
+                info = 'Item %s removed from list' % (scn.srti_props.list_values[scn.srti_props.selected_value_index].name)
+                scn.srti_props.selected_value_index -= 1
+                self.report({'INFO'}, info)
+                scn.srti_props.list_values.remove(idx)
+
+        if self.action == 'ADD':
+            item = scn.srti_props.list_values.add()
+            #item.id = len(scn.srti_props.list_values)
+            item.name = "Value" # assign name of selected object
+            scn.srti_props.selected_value_index = (len(scn.srti_props.list_values)-1)
+            info = '%s added to list' % (item.name)
+            self.report({'INFO'}, info)
+
+        return {"FINISHED"}
     
 ##############
 #####GUI######
 ##############
+class Values_UL_items(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        row = layout.row()
+        row.alignment = 'LEFT'
+        row.label("Id: %d" % (index))
+        row.prop(item, "name", text="", emboss=False, translate=False)
+        row2 = row.row(align = True)
+        row2.prop(item,"min")
+        row2.prop(item,"max")
+        row2.prop(item,"steps")
+
+    def invoke(self, context, event):
+        pass   
+
+
 class SyntheticRTIPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
     bl_label = "Lamps"
@@ -243,6 +359,9 @@ class SyntheticRTIPanel(bpy.types.Panel):
 
         num_light = len(curr_scene.srti_props.list_lights)
         num_cam = len(curr_scene.srti_props.list_cameras)
+        num_values = len(curr_scene.srti_props.list_values)
+        tot_comb = numpy.prod(list(row.steps for row in curr_scene.srti_props.list_values))
+
         if curr_scene.srti_props.main_parent:
             main = curr_scene.srti_props.main_parent.name
         else:
@@ -250,19 +369,37 @@ class SyntheticRTIPanel(bpy.types.Panel):
 
         layout = self.layout
         layout.prop(curr_scene.srti_props, "lightsFilePath", text = 'File')
-        layout.operator("srti.create_lamps")
-        layout.operator("srti.delete_lamps")
-        layout.operator("srti.create_cameras")
-        layout.operator("srti.delete_cameras")
+        row = layout.row(align = True)
+        row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
+        row.operator("srti.delete_lamps", icon = "X")
+        row = layout.row(align = True)
+        row.operator("srti.create_cameras",icon = "OUTLINER_DATA_CAMERA")
+        row.operator("srti.delete_cameras", icon = "X")
         box = layout.box()
         box.label("RNA PROP")
         box.label("main = %s" % main)
         box.label("lamps = %i" % num_light)
         box.label("cameras = %i" % num_cam)
-        box.label("frame totali = %i" % (num_light * num_cam))
-        layout.operator("srti.animate_all")
-        layout.operator("srti.render_images")
-        layout.operator("srti.create_file")
+        box.label ("Values = %i" % num_values)
+        box.label("Combnation = %i" % tot_comb)
+        box.label("frame totali = %i" % (num_light * num_cam *tot_comb))
+
+        row = layout.row()
+        row.template_list("Values_UL_items", "", curr_scene.srti_props, "list_values", curr_scene.srti_props, "selected_value_index", rows=3)
+
+        col = row.column(align=True)
+        col.operator("srti.values_uilist", icon='ZOOMIN', text="").action = 'ADD'
+        col.operator("srti.values_uilist", icon='ZOOMOUT', text="").action = 'REMOVE'
+        col.separator()
+        col.operator("srti.values_uilist", icon='TRIA_UP', text="").action = 'UP'
+        col.operator("srti.values_uilist", icon='TRIA_DOWN', text="").action = 'DOWN'
+
+        layout.prop(curr_scene.srti_props, "main_object", text = "Object")
+        
+        col = layout.column(align = True)
+        col.operator("srti.animate_all", icon ="KEYINGSET")
+        col.operator("srti.render_images", icon = "RENDER_ANIMATION")
+        col.operator("srti.create_file", icon = "FILE_TEXT")
 
  ######RNA PROPERTIES######
 
@@ -277,10 +414,15 @@ class camera(bpy.types.PropertyGroup):
         description = "A camera")
 
 class value(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty()
-    min = bpy.props.FloatProperty()
-    max = bpy.props.FloatProperty()
-    steps = bpy.props.IntProperty()
+    #name = bpy.props.StringProperty()
+    min = bpy.props.FloatProperty(default = 0)
+    max = bpy.props.FloatProperty(default = 1)
+    steps = bpy.props.IntProperty(default = 2, min = 2)
+
+class value_node(bpy.types.PropertyGroup):
+    node = bpy.props.PointerProperty(name = "Value Node",
+        type = bpy.types.Node,
+        description = "value nodes")
 
 class srti_props(bpy.types.PropertyGroup):
     lightsFilePath = bpy.props.StringProperty(name="Lights file Path",
@@ -289,12 +431,19 @@ class srti_props(bpy.types.PropertyGroup):
         description = 'Path to the lights file.')
 
     main_parent = bpy.props.PointerProperty(name="Main Parent",
-        type=bpy.types.ID,
-        description = "Main object of the group")
+        type=bpy.types.Object,
+        description = "Main parent of the group")
+
+    main_object = bpy.props.PointerProperty(name="Main object",
+        type=bpy.types.Object,
+        description = "Main object to apply material")
+
+    selected_value_index = bpy.props.IntProperty()
 
     list_lights = bpy.props.CollectionProperty(type = light)
     list_cameras = bpy.props.CollectionProperty(type = camera)
     list_values = bpy.props.CollectionProperty(type = value)
+    list_nodes = bpy.props.CollectionProperty(type = value_node)
 
 def register():
 
@@ -302,6 +451,7 @@ def register():
     bpy.utils.register_class(light)
     bpy.utils.register_class(camera)
     bpy.utils.register_class(value)
+    bpy.utils.register_class(value_node)
     bpy.utils.register_class(srti_props)
     bpy.types.Scene.srti_props = bpy.props.PointerProperty(type = srti_props)
 
@@ -313,6 +463,8 @@ def register():
     bpy.utils.register_class(create_export_file)
     bpy.utils.register_class(render_images)
     bpy.utils.register_class(animate_all)
+    bpy.utils.register_class(Values_UL_items)
+    bpy.utils.register_class(values_UIList)
     bpy.utils.register_class(SyntheticRTIPanel)
 
 def unregister():
