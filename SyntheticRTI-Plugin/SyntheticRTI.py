@@ -170,16 +170,17 @@ class animate_all(bpy.types.Operator):
         object = curr_scene.srti_props.main_object
         all_values = []
         material_list = []
+        val_names = {}
 
-        tot_light = len(lamp_list)
+        tot_light = max(len(lamp_list),1)
         tot_cam = len(camera_list)
         
         if tot_cam < 1:
-            self.report({'ERROR'}, "There are any cameras in the scene.")
+            self.report({'ERROR'}, "There are no cameras in the scene.")
             return{'FINISHED'}
 
         if not object:
-            self.report({'WARNING'}, "No object selected for values")
+            self.report({'WARNING'}, "No object selected for values.")
             tot_comb = 1
         else:
             #add value node to all materials enabling nodes fore each
@@ -189,12 +190,19 @@ class animate_all(bpy.types.Operator):
                     
                     material_slot.material.use_nodes = True
                     node_list=[]
+                    index = 0
+                    #bpy.ops.node.select_all(action = 'DESELECT')
+                    for node in [x for x in material_slot.material.node_tree.nodes if x.name.startswith("srti_")]:
+                        material_slot.material.node_tree.nodes.remove(node)
+                    #bpy.ops.node.delete()
+
                     for value in value_list:
                         node = material_slot.material.node_tree.nodes.new("ShaderNodeValue")
-
-                        node.name = value.name
+                        node.name = "srti_" + value.name
                         node.label = value.name
+                        node.location = (0, -100*index)
                         node_list.append(node)
+                        index += 1
                     material_list.append(node_list)
 
             print(material_list)
@@ -202,8 +210,11 @@ class animate_all(bpy.types.Operator):
             #Creation of values array
             values = curr_scene.srti_props.list_values
             global all_values
+            index_name = 0
             for val in values:
                 all_values.append(numpy.linspace(val.min,val.max,val.steps))
+                val_names.update({val.name:index_name})
+                index_name += 1
             print (all_values)
             tot_comb = numpy.prod(list(row.steps for row in values))
         print("out")
@@ -224,8 +235,13 @@ class animate_all(bpy.types.Operator):
         curr_scene.timeline_markers.clear()
         
         #TODO loop property
-        for curr_val in itertools.product(*all_values) if object else [0]:
-
+        for curr_val in itertools.product(*all_values) if object else [0]: #Loop for every value combination (if no object we only do once)
+            for material in material_list if object else []: #loop over every object's materials if there is an object              
+                for val_node in material: #loop for every value node
+                    curr_frame = (index_prop * tot_cam * tot_light)
+                    val_node.outputs[0].keyframe_insert(data_path = "default_value", frame = curr_frame )
+                    val_node.outputs[0].default_value = curr_val[val_names[val_node.name[5:]]]
+                    val_node.outputs[0].keyframe_insert(data_path = "default_value", frame = curr_frame + 1)
             for cam in camera_list: #loop every camera
                 mark = curr_scene.timeline_markers.new(cam.camera.name, index_prop*tot_cam*tot_light + index_cam * tot_light + 1) # create a marker
                 mark.camera = cam.camera
@@ -375,14 +391,7 @@ class SyntheticRTIPanel(bpy.types.Panel):
         row = layout.row(align = True)
         row.operator("srti.create_cameras",icon = "OUTLINER_DATA_CAMERA")
         row.operator("srti.delete_cameras", icon = "X")
-        box = layout.box()
-        box.label("RNA PROP")
-        box.label("main = %s" % main)
-        box.label("lamps = %i" % num_light)
-        box.label("cameras = %i" % num_cam)
-        box.label ("Values = %i" % num_values)
-        box.label("Combnation = %i" % tot_comb)
-        box.label("frame totali = %i" % (num_light * num_cam *tot_comb))
+        
 
         row = layout.row()
         row.template_list("Values_UL_items", "", curr_scene.srti_props, "list_values", curr_scene.srti_props, "selected_value_index", rows=3)
@@ -401,6 +410,15 @@ class SyntheticRTIPanel(bpy.types.Panel):
         col.operator("srti.render_images", icon = "RENDER_ANIMATION")
         col.operator("srti.create_file", icon = "FILE_TEXT")
 
+        box = layout.box()  
+        box.label("DEBUG")
+        box.label("main = %s" % main)
+        box.label("lamps = %i" % num_light)
+        box.label("cameras = %i" % num_cam)
+        box.label ("Values = %i" % num_values)
+        box.label("Combnation = %i" % tot_comb)
+        box.label("frame totali = %i" % (num_light * num_cam *tot_comb))
+
  ######RNA PROPERTIES######
 
 class light(bpy.types.PropertyGroup):
@@ -414,15 +432,9 @@ class camera(bpy.types.PropertyGroup):
         description = "A camera")
 
 class value(bpy.types.PropertyGroup):
-    #name = bpy.props.StringProperty()
     min = bpy.props.FloatProperty(default = 0)
     max = bpy.props.FloatProperty(default = 1)
     steps = bpy.props.IntProperty(default = 2, min = 2)
-
-class value_node(bpy.types.PropertyGroup):
-    node = bpy.props.PointerProperty(name = "Value Node",
-        type = bpy.types.Node,
-        description = "value nodes")
 
 class srti_props(bpy.types.PropertyGroup):
     lightsFilePath = bpy.props.StringProperty(name="Lights file Path",
@@ -443,7 +455,6 @@ class srti_props(bpy.types.PropertyGroup):
     list_lights = bpy.props.CollectionProperty(type = light)
     list_cameras = bpy.props.CollectionProperty(type = camera)
     list_values = bpy.props.CollectionProperty(type = value)
-    list_nodes = bpy.props.CollectionProperty(type = value_node)
 
 def register():
 
@@ -451,7 +462,7 @@ def register():
     bpy.utils.register_class(light)
     bpy.utils.register_class(camera)
     bpy.utils.register_class(value)
-    bpy.utils.register_class(value_node)
+    #bpy.utils.register_class(value_node)
     bpy.utils.register_class(srti_props)
     bpy.types.Scene.srti_props = bpy.props.PointerProperty(type = srti_props)
 
