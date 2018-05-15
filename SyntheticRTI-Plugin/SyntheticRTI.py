@@ -159,36 +159,48 @@ class animate_all(bpy.types.Operator):
     bl_label = "Animate all"
     bl_options = {'REGISTER', 'UNDO'}
     
-    global file_lines
+   
 
     def execute(self, context):
 
+        #index
         index_light = 0
         index_cam = 0
         index_prop = 0
 
+        #global var
         curr_scene = context.scene
         lamp_list = curr_scene.srti_props.list_lights
         camera_list = curr_scene.srti_props.list_cameras
         value_list = curr_scene.srti_props.list_values
         object = curr_scene.srti_props.main_object
+        global file_lines
+
+        #generated lists
         all_values = []
         material_list = []
         val_names = {}
 
-        tot_light = max(len(lamp_list),1)
+        #generated value
+        tot_light = max(len(lamp_list),1) #at least we want to iterate one frame over the camera when there are no lights
         tot_cam = len(camera_list)
         
+        #Abort if no camera in scene
         if tot_cam < 1:
             self.report({'ERROR'}, "There are no cameras in the scene.")
             return{'FINISHED'}
 
+        file_lines.clear()
+
+        #If there is no object selected we only iterate over cameras and lamps
         if not object:
             self.report({'WARNING'}, "No object selected for values.")
             tot_comb = 1
+            file_lines.append("image,x_lamp,y_lamp,z_lamp")
         else:
             #add value node to all materials enabling nodes fore each
             #global material_list
+            file_lines.append("image,x_lamp,y_lamp,z_lamp,"+",".join(value.name for value in value_list))
             for material_slot in object.material_slots:
                 if material_slot.material:
                     
@@ -209,7 +221,7 @@ class animate_all(bpy.types.Operator):
                         index += 1
                     material_list.append(node_list)
 
-            print(material_list)
+            print(file_lines)
 
             #Creation of values array
             values = curr_scene.srti_props.list_values
@@ -249,6 +261,12 @@ class animate_all(bpy.types.Operator):
             for cam in camera_list: #loop every camera
                 mark = curr_scene.timeline_markers.new(cam.camera.name, index_prop*tot_cam*tot_light + index_cam * tot_light + 1) # create a marker
                 mark.camera = cam.camera
+
+                if not lamp_list: #create the list when there aren't lights
+                    string = "nome,,,," + ",".join(str(x) for x in curr_val)
+                    file_lines.append(string)
+                    print(string)
+                    
                 for lamp in lamp_list: #loop every lamp
                     lamp = lamp.light
                     #animate lamps
@@ -261,6 +279,11 @@ class animate_all(bpy.types.Operator):
                     lamp.hide_render = False
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame)
 
+                    #add a line for the files with all the details
+                    string = "%s,%f,%f,%f," % ("nome", lamp.location[0], lamp.location[1], lamp.location[2])
+                    string += ",".join(str(x) for x in curr_val)
+                    file_lines.append(string)
+                    print(string)
                     index_light += 1
 
                 index_cam += 1
@@ -377,7 +400,7 @@ class SyntheticRTIPanel(bpy.types.Panel):
     def draw(self, context):
         curr_scene = context.scene
 
-        num_light = len(curr_scene.srti_props.list_lights)
+        num_light = max(len(curr_scene.srti_props.list_lights),1)
         num_cam = len(curr_scene.srti_props.list_cameras)
         num_values = len(curr_scene.srti_props.list_values)
         tot_comb = numpy.prod(list(row.steps for row in curr_scene.srti_props.list_values))
