@@ -3,6 +3,8 @@ from mathutils import Vector
 import numpy
 import itertools
 
+####Global values###
+file_lines = []
 
 ###Various function###
 
@@ -37,7 +39,7 @@ class create_lamps(bpy.types.Operator):
         bpy.ops.srti.delete_lamps() #delete exsisting lamps
 
         curr_scene = context.scene
-        file_path = curr_scene.srti_props.lightsFilePath
+        file_path = curr_scene.srti_props.light_file_path
 
         #create the main parent
         create_main(curr_scene)
@@ -157,6 +159,8 @@ class animate_all(bpy.types.Operator):
     bl_label = "Animate all"
     bl_options = {'REGISTER', 'UNDO'}
     
+    global file_lines
+
     def execute(self, context):
 
         index_light = 0
@@ -184,7 +188,7 @@ class animate_all(bpy.types.Operator):
             tot_comb = 1
         else:
             #add value node to all materials enabling nodes fore each
-            global material_list
+            #global material_list
             for material_slot in object.material_slots:
                 if material_slot.material:
                     
@@ -209,7 +213,7 @@ class animate_all(bpy.types.Operator):
 
             #Creation of values array
             values = curr_scene.srti_props.list_values
-            global all_values
+            #global all_values
             index_name = 0
             for val in values:
                 all_values.append(numpy.linspace(val.min,val.max,val.steps))
@@ -384,7 +388,7 @@ class SyntheticRTIPanel(bpy.types.Panel):
             main = "None"
 
         layout = self.layout
-        layout.prop(curr_scene.srti_props, "lightsFilePath", text = 'File')
+        layout.prop(curr_scene.srti_props, "light_file_path", text = 'light file')
         row = layout.row(align = True)
         row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
         row.operator("srti.delete_lamps", icon = "X")
@@ -407,6 +411,7 @@ class SyntheticRTIPanel(bpy.types.Panel):
         
         col = layout.column(align = True)
         col.operator("srti.animate_all", icon ="KEYINGSET")
+        layout.prop(curr_scene.srti_props, "light_file_path", text = 'Output')
         col.operator("srti.render_images", icon = "RENDER_ANIMATION")
         col.operator("srti.create_file", icon = "FILE_TEXT")
 
@@ -437,9 +442,14 @@ class value(bpy.types.PropertyGroup):
     steps = bpy.props.IntProperty(default = 2, min = 2)
 
 class srti_props(bpy.types.PropertyGroup):
-    lightsFilePath = bpy.props.StringProperty(name="Lights file Path",
+    light_file_path = bpy.props.StringProperty(name="Lights file Path",
         subtype='FILE_PATH',
         default="*.lp",
+        description = 'Path to the lights file.')
+
+    save_file_path = bpy.props.StringProperty(name="Lights file Path",
+        subtype='FILE_PATH',
+        default="*.csv",
         description = 'Path to the lights file.')
 
     main_parent = bpy.props.PointerProperty(name="Main Parent",
@@ -455,6 +465,7 @@ class srti_props(bpy.types.PropertyGroup):
     list_lights = bpy.props.CollectionProperty(type = light)
     list_cameras = bpy.props.CollectionProperty(type = camera)
     list_values = bpy.props.CollectionProperty(type = value)
+    #list_file = bpy.props.CollectionProperty(type = bpy.props.StringProperty)
 
 def register():
 
@@ -489,7 +500,7 @@ def unregister():
     bpy.utils.unregister_class(animate_all)
 
     ##Delete of custom rna data
-    del bpy.types.Scene.srti_lightsFilePath
+    del bpy.types.Scene.srti_light_file_path
     del bpy.types.Scene.srti_main_parent_prop
 
 if __name__ == "__main__":
