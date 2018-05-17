@@ -2,6 +2,7 @@ import bpy
 from mathutils import Vector
 import numpy
 import itertools
+import os
 
 ####Global values###
 file_lines = []
@@ -25,6 +26,10 @@ def delete_main(scene):
         scene.srti_props.main_parent.select = True #delete the main parent (need revision)
         scene.srti_props.main_parent = None
         bpy.ops.object.delete()
+
+def format_index(num, tot):
+    tot_dig = len(str(tot))
+    return "{0:0{dig}d}".format(num, dig = tot_dig)
    
 
 ###OPERATORS###
@@ -50,7 +55,7 @@ class create_lamps(bpy.types.Operator):
         file.close()
         
         n_luci = int(righe[0].split()[0])#La prima riga contiene il numero di luci totali
-        digit_luci = len(str(n_luci)) #ricavo il numero di caratteri massimo per scrivere i numeri delle lampade
+        #digit_luci = len(str(n_luci)) #ricavo il numero di caratteri massimo per scrivere i numeri delle lampade
         print(n_luci)
         
         ##Uso una luce standard, TODO aggiungere un oggetto
@@ -64,7 +69,7 @@ class create_lamps(bpy.types.Operator):
             direction = Vector((lmp_x, lmp_y, lmp_z))
 
             print(lamp , 'x=', lmp_x, 'y=', lmp_y, 'z=', lmp_z) #stampo i valori per riga
-            lamp_object = bpy.data.objects.new(name="Lampada_{0:0>{dig}}".format(lamp, dig = digit_luci), object_data=lamp_data) # Create new object with our lamp datablock
+            lamp_object = bpy.data.objects.new(name="Lampada_{0}".format(format_index(lamp, n_luci)), object_data=lamp_data) # Create new object with our lamp datablock
             curr_scene.objects.link(lamp_object) # Link lamp object to the scene so it'll appear in this scene
             lamp_object.parent = main_parent
             lamp_object.location = (lmp_x, lmp_y, lmp_z) # Place lamp to a specified location
@@ -174,6 +179,7 @@ class animate_all(bpy.types.Operator):
         camera_list = curr_scene.srti_props.list_cameras
         value_list = curr_scene.srti_props.list_values
         object = curr_scene.srti_props.main_object
+        file_name = curr_scene.srti_props.save_name
         global file_lines
 
         #generated lists
@@ -188,7 +194,7 @@ class animate_all(bpy.types.Operator):
         #Abort if no camera in scene
         if tot_cam < 1:
             self.report({'ERROR'}, "There are no cameras in the scene.")
-            return{'FINISHED'}
+            return{'CANCELLED'}
 
         file_lines.clear()
 
@@ -221,8 +227,6 @@ class animate_all(bpy.types.Operator):
                         index += 1
                     material_list.append(node_list)
 
-            print(file_lines)
-
             #Creation of values array
             values = curr_scene.srti_props.list_values
             #global all_values
@@ -233,11 +237,16 @@ class animate_all(bpy.types.Operator):
                 index_name += 1
             print (all_values)
             tot_comb = numpy.prod(list(row.steps for row in values))
-        print("out")
+
+        print("---out---")
         print(material_list)
         print (all_values)
+        print(file_lines)
+
+        #Set animation boundaries
+        tot_frames = tot_cam * tot_light * tot_comb
         curr_scene.frame_start = 1
-        curr_scene.frame_end = tot_cam * tot_light * tot_comb
+        curr_scene.frame_end = tot_frames
         #val_combination = list(itertools.product(*all_values))
 
         #Delete animations
@@ -259,11 +268,14 @@ class animate_all(bpy.types.Operator):
                     val_node.outputs[0].default_value = curr_val[val_names[val_node.name[5:]]]
                     val_node.outputs[0].keyframe_insert(data_path = "default_value", frame = curr_frame + 1)
             for cam in camera_list: #loop every camera
-                mark = curr_scene.timeline_markers.new(cam.camera.name, index_prop*tot_cam*tot_light + index_cam * tot_light + 1) # create a marker
+                curr_frame = index_prop*tot_cam*tot_light + index_cam * tot_light + 1
+                mark = curr_scene.timeline_markers.new(cam.camera.name, curr_frame) # create a marker
                 mark.camera = cam.camera
 
                 if not lamp_list: #create the list when there aren't lights
-                    string = "nome,,,," + ",".join(str(x) for x in curr_val)
+                    string = "{0}_{1},,,".format(file_name, format_index(curr_frame,tot_frames))
+                    if curr_val:
+                        string +=","+",".join(str(x) for x in curr_val)
                     file_lines.append(string)
                     print(string)
                     
@@ -280,8 +292,9 @@ class animate_all(bpy.types.Operator):
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame)
 
                     #add a line for the files with all the details
-                    string = "%s,%f,%f,%f," % ("nome", lamp.location[0], lamp.location[1], lamp.location[2])
-                    string += ",".join(str(x) for x in curr_val)
+                    string = "%s_%s,%f,%f,%f" % (file_name, format_index(curr_frame, tot_frames), lamp.location[0], lamp.location[1], lamp.location[2])
+                    if curr_val:
+                        string += ","+ ",".join(str(x) for x in curr_val)
                     file_lines.append(string)
                     print(string)
                     index_light += 1
@@ -302,7 +315,28 @@ class render_images(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        #TODO è poi così necessario?
+        curr_scene = context.scene
+        file_name = curr_scene.srti_props.save_name
+        save_dir = curr_scene.srti_props.output_folder
+
+        num_light = max(len(curr_scene.srti_props.list_lights),1)
+        num_cam = len(curr_scene.srti_props.list_cameras)
+        num_values = len(curr_scene.srti_props.list_values)
+        tot_comb = numpy.prod(list(row.steps for row in curr_scene.srti_props.list_values))
+        print(tot_comb)
+        if not os.path.isdir(save_dir): #Check if path is set
+            self.report({'ERROR'}, "No filepath.")
+            return{'CANCELLED'}
+
+        #TODO check why number get float insteasd of int
+        tot_frame = int(num_light * num_cam * max(tot_comb,1))
+        print(tot_frame)
+        max_digit = len(str(tot_frame))
+        print(max_digit)
+        curr_scene.render.filepath = "{0}/{1}_{2}".format(save_dir[:-1],file_name,"#"*max_digit)
+
+        bpy.ops.render.render(animation=True)
+
         return{'FINISHED'}
 
 class create_export_file(bpy.types.Operator):
@@ -312,7 +346,21 @@ class create_export_file(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        #TODO
+        curr_scene = context.scene
+        file_name = curr_scene.srti_props.save_name
+        save_dir = curr_scene.srti_props.output_folder
+
+        if not os.path.isdir(save_dir): #Check if path is set
+            self.report({'ERROR'}, "No filepath.")
+            return{'CANCELLED'}
+
+        file = open(save_dir+file_name+".csv", "w")
+        for line in file_lines:
+            file.write(line)
+            file.write('\n')
+
+        file.close()
+
         return{'FINISHED'}
 
 # ui list item actions
@@ -434,7 +482,8 @@ class SyntheticRTIPanel(bpy.types.Panel):
         
         col = layout.column(align = True)
         col.operator("srti.animate_all", icon ="KEYINGSET")
-        layout.prop(curr_scene.srti_props, "light_file_path", text = 'Output')
+        layout.prop(curr_scene.srti_props, "output_folder", text = 'Output folder')
+        layout.prop(curr_scene.srti_props, "save_name", text = 'Output name')
         col.operator("srti.render_images", icon = "RENDER_ANIMATION")
         col.operator("srti.create_file", icon = "FILE_TEXT")
 
@@ -470,10 +519,13 @@ class srti_props(bpy.types.PropertyGroup):
         default="*.lp",
         description = 'Path to the lights file.')
 
-    save_file_path = bpy.props.StringProperty(name="Lights file Path",
-        subtype='FILE_PATH',
-        default="*.csv",
+    output_folder = bpy.props.StringProperty(name="Save file directory",
+        subtype='DIR_PATH',
         description = 'Path to the lights file.')
+
+    save_name = bpy.props.StringProperty(name="Save file name",
+        default = "Image",
+        description = "file name")
 
     main_parent = bpy.props.PointerProperty(name="Main Parent",
         type=bpy.types.Object,
@@ -482,6 +534,8 @@ class srti_props(bpy.types.PropertyGroup):
     main_object = bpy.props.PointerProperty(name="Main object",
         type=bpy.types.Object,
         description = "Main object to apply material")
+
+    modified = bpy.props.BoolProperty(name = "Boolean if not animated", default = True)
 
     selected_value_index = bpy.props.IntProperty()
 
