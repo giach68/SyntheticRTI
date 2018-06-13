@@ -30,6 +30,16 @@ def delete_main(scene):
 def format_index(num, tot):
     tot_dig = len(str(tot))
     return "{0:0{dig}d}".format(num, dig = tot_dig)
+
+def calculate_tot_frame(context):
+    """Return the numbers of total frames
+    """
+    curr_scene = context.scene
+    num_light = max(len(curr_scene.srti_props.list_lights),1)
+    num_cam = len(curr_scene.srti_props.list_cameras)
+    num_values = len(curr_scene.srti_props.list_values)
+    tot_comb = numpy.prod(list(row.steps for row in curr_scene.srti_props.list_values))
+    return int(num_light * num_cam * max(tot_comb,1))
    
 
 ###OPERATORS###
@@ -319,23 +329,14 @@ class render_images(bpy.types.Operator):
         file_name = curr_scene.srti_props.save_name
         save_dir = curr_scene.srti_props.output_folder
 
-        num_light = max(len(curr_scene.srti_props.list_lights),1)
-        num_cam = len(curr_scene.srti_props.list_cameras)
-        num_values = len(curr_scene.srti_props.list_values)
-        tot_comb = numpy.prod(list(row.steps for row in curr_scene.srti_props.list_values))
-        print(tot_comb)
         if not os.path.isdir(save_dir): #Check if path is set
             self.report({'ERROR'}, "No filepath.")
             return{'CANCELLED'}
 
-        #TODO check why number get float insteasd of int
-        tot_frame = int(num_light * num_cam * max(tot_comb,1))
-        print(tot_frame)
-        max_digit = len(str(tot_frame))
-        print(max_digit)
+        max_digit = len(str(calculate_tot_frame(context)))
         curr_scene.render.filepath = "{0}/{1}_{2}".format(save_dir[:-1],file_name,"#"*max_digit)
-
-        bpy.ops.render.render(animation=True)
+        #bpy.ops.render.view_show()
+        #bpy.ops.render.render(animation=True)
 
         return{'FINISHED'}
 
@@ -492,7 +493,7 @@ class SyntheticRTIPanel(bpy.types.Panel):
         box.label("main = %s" % main)
         box.label("lamps = %i" % num_light)
         box.label("cameras = %i" % num_cam)
-        box.label ("Values = %i" % num_values)
+        box.label("Values = %i" % num_values)
         box.label("Combnation = %i" % tot_comb)
         box.label("frame totali = %i" % (num_light * num_cam *tot_comb))
 
