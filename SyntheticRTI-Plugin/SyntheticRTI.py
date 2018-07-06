@@ -302,7 +302,7 @@ class animate_all(bpy.types.Operator):
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame)
 
                     #add a line for the files with all the details
-                    string = "%s_%s,%f,%f,%f" % (file_name, format_index(curr_frame, tot_frames), lamp.location[0], lamp.location[1], lamp.location[2])
+                    string = "%s-%s,%f,%f,%f" % (file_name, format_index(curr_frame, tot_frames), lamp.location[0], lamp.location[1], lamp.location[2])
                     if curr_val:
                         string += ","+ ",".join(str(x) for x in curr_val)
                     file_lines.append(string)
@@ -334,7 +334,7 @@ class render_images(bpy.types.Operator):
             return{'CANCELLED'}
 
         max_digit = len(str(calculate_tot_frame(context)))
-        curr_scene.render.filepath = "{0}/{1}_{2}".format(save_dir[:-1],file_name,"#"*max_digit)
+        curr_scene.render.filepath = "{0}/{1}-{2}".format(save_dir[:-1],file_name,"#"*max_digit)
         #bpy.ops.render.view_show()
         #bpy.ops.render.render(animation=True)
 
