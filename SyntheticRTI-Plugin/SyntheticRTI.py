@@ -200,6 +200,9 @@ class animate_all(bpy.types.Operator):
         #generated value
         tot_light = max(len(lamp_list),1) #at least we want to iterate one frame over the camera when there are no lights
         tot_cam = len(camera_list)
+
+        #set renderer to cycle (could be written in a setting file)
+        curr_scene.render.engine = 'CYCLES'
         
         #Abort if no camera in scene
         if tot_cam < 1:
@@ -273,6 +276,7 @@ class animate_all(bpy.types.Operator):
         for curr_val in itertools.product(*all_values) if object else [0]: #Loop for every value combination (if no object we only do once)
             for material in material_list if object else []: #loop over every object's materials if there is an object              
                 for val_node in material: #loop for every value node
+                    #TODO add a marker name for parameters
                     curr_frame = (index_prop * tot_cam * tot_light)
                     val_node.outputs[0].keyframe_insert(data_path = "default_value", frame = curr_frame )
                     val_node.outputs[0].default_value = curr_val[val_names[val_node.name[5:]]]
@@ -329,12 +333,23 @@ class render_images(bpy.types.Operator):
         file_name = curr_scene.srti_props.save_name
         save_dir = curr_scene.srti_props.output_folder
 
-        if not os.path.isdir(save_dir): #Check if path is set
-            self.report({'ERROR'}, "No filepath.")
-            return{'CANCELLED'}
 
+        #TODO not usable with relative path
+        #if not os.path.isdir(save_dir): #Check if path is set
+        #    self.report({'ERROR'}, "No filepath.")
+        #    return{'CANCELLED'}
+
+         #TODO parametrize all export setting in a file for presets
         max_digit = len(str(calculate_tot_frame(context)))
-        curr_scene.render.filepath = "{0}/{1}-{2}".format(save_dir[:-1],file_name,"#"*max_digit)
+        curr_scene.render.filepath = "{0}/EXR/{1}-{2}".format(save_dir[:-1],file_name,"#"*max_digit)
+        curr_scene.render.image_settings.file_format = 'OPEN_EXR_MULTILAYER'
+        curr_scene.render.image_settings.color_mode = 'RGBA'
+        curr_scene.render.image_settings.color_depth = '32'
+        curr_scene.render.image_settings.exr_codec = 'ZIP'
+
+        #set rendering to not overwrrite
+        curr_scene.render.use_overwrite = False
+
         #bpy.ops.render.view_show()
         #bpy.ops.render.render(animation=True)
 
@@ -351,15 +366,15 @@ class create_export_file(bpy.types.Operator):
         file_name = curr_scene.srti_props.save_name
         save_dir = curr_scene.srti_props.output_folder
 
-        if not os.path.isdir(save_dir): #Check if path is set
-            self.report({'ERROR'}, "No filepath.")
-            return{'CANCELLED'}
+        #TODO not usable with relative path
+        #if not os.path.isdir(save_dir): #Check if path is set
+        #    self.report({'ERROR'}, "No filepath.")
+        #    return{'CANCELLED'}
 
-        file = open(save_dir+file_name+".csv", "w")
+        file = open(bpy.path.abspath(save_dir+file_name+".csv"), "w")
         for line in file_lines:
             file.write(line)
             file.write('\n')
-
         file.close()
 
         return{'FINISHED'}
