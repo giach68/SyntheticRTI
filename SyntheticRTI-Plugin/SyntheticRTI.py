@@ -106,6 +106,7 @@ class delete_lamps(bpy.types.Operator):
 
         if lamp_list:
             for obj in lamp_list:
+                obj.light.hide = False
                 obj.light.select = True
     
         bpy.ops.object.delete()
@@ -295,11 +296,16 @@ class animate_all(bpy.types.Operator):
                     curr_frame = (index_prop * tot_cam * tot_light) + (index_cam * tot_light) + index_light + 1
                     #hide lamp on theprevious and next frame
                     lamp.hide_render = True
+                    lamp.hide = True
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame - 1)
+                    lamp.keyframe_insert(data_path = 'hide', frame = curr_frame - 1)
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame + 1)
+                    lamp.keyframe_insert(data_path = 'hide', frame = curr_frame + 1)
                     #rendo visibile la lampada solo nel suo frame
                     lamp.hide_render = False
+                    lamp.hide = False
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame)
+                    lamp.keyframe_insert(data_path = 'hide', frame = curr_frame)
 
                     #add a line for the files with all the details
                     string = "%s-%s,%f,%f,%f" % (file_name, format_index(curr_frame, tot_frames), lamp.location[0], lamp.location[1], lamp.location[2])
