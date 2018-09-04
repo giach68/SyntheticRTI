@@ -20,7 +20,6 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 file_lines = []
 
 ###Various function###
-
 def create_main(scene):
     """Create the main object if not already present"""
     #Aggiungo un empty a cui collegare tutte le luci per poter modificarle come gruppo
@@ -504,17 +503,15 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         else:
             project_number = ''
 
-        print("file path: ",file_path)
-        print("file name: ", file_name)
-        print("folder: ", folder_path)
-        print("project name: ", project_name)
-        print("project number: ", project_number)
-        
+        self.report({'OPERATOR'},"file path: " + file_path)
+        self.report({'OPERATOR'}, "file name: "+ file_name)
+        self.report({'OPERATOR'},"folder: "+ folder_path)
+        self.report({'OPERATOR'},"project name: "+ project_name)
+        self.report({'OPERATOR'},"project number: "+ project_number)
+
         #search for minimum and maximum frames
         list_of_files = os.listdir(folder_path)
         frame_max = frame_min = int(re.split('(\d+$)', file_name)[1])
-        print ("max= ", frame_max)
-        print ("min= ", frame_min)
 
         for file in list_of_files:
             #print(file)
@@ -525,8 +522,8 @@ class create_export_node(bpy.types.Operator, ImportHelper):
                 frame_max = num if num > frame_max else frame_max  
                 frame_min = num if num < frame_min else frame_min
     
-        print ("max= ", frame_max)
-        print ("min= ", frame_min)
+        self.report({'OPERATOR'},"max= "+ str(frame_max))
+        self.report({'OPERATOR'},"min= "+ str(frame_min))
 
         #create nodes 
         curr_scene.use_nodes = True
@@ -657,30 +654,37 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         node_out_normal.label = 'OUT_NORMAL'
         node_out_normal.location = (660, 300)
         node_out_normal.file_slots.clear()
-        node_out_normal.file_slots.new(project_name + "NORMAL")
+        node_out_normal.file_slots.new(project_name + "NORMAL-")
         tree_links.new(node_normal_add.outputs[0],node_out_normal.inputs[0])
         node_out_normal.base_path = os.path.abspath(folder_path + "\..\PNG")
 
         #OUT_COMPOSITE
-        max_digit = len(str(frame_max))
         node_out_composite = tree_nodes.new(type = 'CompositorNodeOutputFile')
         node_out_composite.name = 'SRTI_OUT_COMPOSITE'
         node_out_composite.label = 'OUT_COMPOSITE'
         node_out_composite.location = (1640, 0)
         node_out_composite.file_slots.clear()
-        node_out_composite.file_slots.new(project_number + "DIFF\\"+project_name+"DIFF-"+"#"*max_digit)
+        node_out_composite.file_slots.new(project_number + "DIFF\\"+project_name+"DIFF-")
         tree_links.new(node_diff.outputs[0],node_out_composite.inputs[0])
-        node_out_composite.file_slots.new(project_number + "DIFF-INDIFF\\"+project_name+"DIFF-INDIFF-"+"#"*max_digit)
+        node_out_composite.file_slots.new(project_number + "DIFF-INDIFF\\"+project_name+"DIFF-INDIFF-")
         tree_links.new(node_diff_indiff.outputs[0],node_out_composite.inputs[1])
-        node_out_composite.file_slots.new(project_number + "DIFF-SPEC\\"+project_name+"DIFF-SPEC-"+"#"*max_digit)
+        node_out_composite.file_slots.new(project_number + "DIFF-SPEC\\"+project_name+"DIFF-SPEC-")
         tree_links.new(node_diff_spec.outputs[0],node_out_composite.inputs[2])
-        node_out_composite.file_slots.new(project_number + "DIFF-SPEC-INDIFF\\"+project_name+"DIFF-SPEC-INDIFF-"+"#"*max_digit)
+        node_out_composite.file_slots.new(project_number + "DIFF-SPEC-INDIFF\\"+project_name+"DIFF-SPEC-INDIFF-")
         tree_links.new(node_diff_spec_indiff.outputs[0],node_out_composite.inputs[3])
-        node_out_composite.file_slots.new(project_number + "DIFF-SPEC-INDIFF-INSPEC\\"+project_name+"DIFF-SPEC-INDIFF-INSPEC-"+"#"*max_digit)
+        node_out_composite.file_slots.new(project_number + "DIFF-SPEC-INDIFF-INSPEC\\"+project_name+"DIFF-SPEC-INDIFF-INSPEC-")
         tree_links.new(node_diff_spec_indiff_inspec.outputs[0],node_out_composite.inputs[4])
-        node_out_composite.file_slots.new(project_number + "SHADOWS\\"+project_name+"SHADOWS-"+"#"*max_digit)
+        node_out_composite.file_slots.new(project_number + "SHADOWS\\"+project_name+"SHADOWS-")
         tree_links.new(node_image.outputs["Shadow"],node_out_composite.inputs[5])
         node_out_composite.base_path = os.path.abspath(folder_path + "\..\PNG")
+
+        #need a folder to save images
+        curr_scene.render.filepath = os.path.abspath(folder_path + "\..\PNG\\tmp")+"\\tmp"
+        curr_scene.render.resolution_percentage = 1
+
+        #enable compositor
+        curr_scene.render.use_compositing = True
+        curr_scene.use_nodes = True
 
         return{'FINISHED'}
 
@@ -692,7 +696,7 @@ class render_normals(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.scene.node_tree.nodes.find("SRTI_OUT_COMPOSITE") == -1 or context.scene.node_tree.nodes.find("SRTI_OUT_NORMAL") == -1:
+        if context.scene.node_tree == None or context.scene.node_tree.nodes.find("SRTI_OUT_COMPOSITE") == -1 or context.scene.node_tree.nodes.find("SRTI_OUT_NORMAL") == -1:
             return False
         else: 
             return True
@@ -720,11 +724,12 @@ class render_normals(bpy.types.Operator):
         #set color management to linear
         curr_scene.display_settings.display_device = 'None'
         
-        #set rendering to not overwrrite
+        #set rendering to overwrrite
         curr_scene.render.use_overwrite = True
  
         #render normal
-        bpy.ops.render.render()
+        bpy.ops.render.render("INVOKE_DEFAULT")
+        bpy.ops.render.view_cancel()
 
         return{'FINISHED'}
 
@@ -736,7 +741,7 @@ class render_composite(bpy.types.Operator):
         
     @classmethod
     def poll(cls, context):
-        if context.scene.node_tree.nodes.find("SRTI_OUT_COMPOSITE") == -1 or context.scene.node_tree.nodes.find("SRTI_OUT_NORMAL") == -1:
+        if context.scene.node_tree == None or context.scene.node_tree.nodes.find("SRTI_OUT_COMPOSITE") == -1 or context.scene.node_tree.nodes.find("SRTI_OUT_NORMAL") == -1:
             return False
         else: 
             return True
@@ -767,7 +772,7 @@ class render_composite(bpy.types.Operator):
         curr_scene.render.use_overwrite = True
  
         #render composite animation
-        bpy.ops.render.render(animation = True)
+        bpy.ops.render.render("INVOKE_DEFAULT", animation = True, write_still=False)
         return{'FINISHED'}
 
 class reset_nodes(bpy.types.Operator):
@@ -780,6 +785,7 @@ class reset_nodes(bpy.types.Operator):
         curr_scene = context.scene
         set_render_exr(curr_scene)
         curr_scene.node_tree.nodes.clear()
+        curr_scene.render.resolution_percentage = 100
         return{'FINISHED'}
 
 
@@ -1009,7 +1015,6 @@ class srti_props(bpy.types.PropertyGroup):
     #list_file = bpy.props.CollectionProperty(type = bpy.props.StringProperty)
 
 def register():
-
     ##register properties
     bpy.utils.register_class(light)
     bpy.utils.register_class(camera)
