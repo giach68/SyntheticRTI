@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SyntheticRTI",
     "author": "Andrea Dall'Alba",
-    "version": (0, 1),
+    "version": (0, 2),
     "blender": (2, 79, 0),
     "location": "View3D > Tools > SyntheticRTI",
     "description": "Plugin to help creating the synthetic database for RTI",
@@ -685,6 +685,8 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         #enable compositor
         curr_scene.render.use_compositing = True
         curr_scene.use_nodes = True
+        curr_scene.frame_end = frame_max
+        curr_scene.frame_start = 1
 
         return{'FINISHED'}
 
@@ -729,7 +731,7 @@ class render_normals(bpy.types.Operator):
  
         #render normal
         bpy.ops.render.render("INVOKE_DEFAULT")
-        bpy.ops.render.view_cancel()
+        #bpy.ops.render.view_cancel()
 
         return{'FINISHED'}
 
