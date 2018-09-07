@@ -325,7 +325,6 @@ class animate_all(bpy.types.Operator):
         #delete markers
         curr_scene.timeline_markers.clear()
         
-        #TODO loop property
         for curr_val in itertools.product(*all_values) if object else [0]: #Loop for every value combination (if no object we only do once)
             for material in material_list if object else []: #loop over every object's materials if there is an object              
                 for val_node in material: #loop for every value node
@@ -420,11 +419,6 @@ class create_export_file(bpy.types.Operator):
         file_name = curr_scene.srti_props.save_name
         save_dir = curr_scene.srti_props.output_folder
 
-        #TODO not usable with relative path
-        #if not os.path.isdir(save_dir): #Check if path is set
-        #    self.report({'ERROR'}, "No filepath.")
-        #    return{'CANCELLED'}
-
         file = open(bpy.path.abspath(save_dir+file_name+".csv"), "w")
         for line in file_lines:
             file.write(line)
@@ -476,7 +470,6 @@ class export_as_lamp(bpy.types.Operator, ExportHelper):
         file.close()
         return{'FINISHED'}
 
-#TODO prepare nodes
 class create_export_node(bpy.types.Operator, ImportHelper):
     """Prepares the file to output png passes"""
     bl_idname = "srti.create_export_node"
@@ -527,6 +520,7 @@ class create_export_node(bpy.types.Operator, ImportHelper):
 
         #create nodes 
         curr_scene.use_nodes = True
+        curr_scene.node_tree.use_opencl = True
         tree_nodes = curr_scene.node_tree.nodes
         tree_links = curr_scene.node_tree.links
         tree_nodes.clear() #delete all nodes
@@ -657,6 +651,10 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         node_out_normal.file_slots.new(project_name + "NORMAL-")
         tree_links.new(node_normal_add.outputs[0],node_out_normal.inputs[0])
         node_out_normal.base_path = os.path.abspath(folder_path + "\..\PNG")
+        node_out_normal.format.file_format = 'PNG'
+        node_out_normal.format.color_mode = 'RGB'
+        node_out_normal.format.color_depth = '16'
+        node_out_normal.format.compression = 0
 
         #OUT_COMPOSITE
         node_out_composite = tree_nodes.new(type = 'CompositorNodeOutputFile')
@@ -677,6 +675,10 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         node_out_composite.file_slots.new(project_number + "SHADOWS\\"+project_name+"SHADOWS-")
         tree_links.new(node_image.outputs["Shadow"],node_out_composite.inputs[5])
         node_out_composite.base_path = os.path.abspath(folder_path + "\..\PNG")
+        node_out_composite.format.file_format = 'PNG'
+        node_out_composite.format.color_mode = 'RGB'
+        node_out_composite.format.color_depth = '16'
+        node_out_composite.format.compression = 0
 
         #need a folder to save images
         curr_scene.render.filepath = os.path.abspath(folder_path + "\..\PNG\\tmp")+"\\tmp"
