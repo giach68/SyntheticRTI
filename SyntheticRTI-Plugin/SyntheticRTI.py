@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SyntheticRTI",
     "author": "Andrea Dall'Alba",
-    "version": (0, 2),
+    "version": (0, 2, 1),
     "blender": (2, 79, 0),
     "location": "View3D > Tools > SyntheticRTI",
     "description": "Plugin to help creating the synthetic database for RTI",
@@ -105,7 +105,7 @@ class create_lamps(bpy.types.Operator):
         file_path = curr_scene.srti_props.light_file_path
 
         if not os.path.isfile(file_path) or os.path.splitext(file_path)[1] != ".lp":
-            self.report({'ERROR'}, 'No valid file selected')
+            self.report({'ERROR'}, 'No valid file selected on '+file_path)
             return {'CANCELLED'}
 
         #create the main parent
@@ -435,16 +435,19 @@ class export_as_lamp(bpy.types.Operator, ExportHelper):
     bl_label = "Export Lamp"
     bl_options = {'REGISTER', 'UNDO'}
     # ExportHelper mixin class uses this
-    filename_ext = ".ls"
+    filename_ext = ".lp"
     filter_glob = bpy.props.StringProperty(
-            default="*.ls",
+            default="*.lp",
             options={'HIDDEN'},
             maxlen=255,  # Max internal buffer length, longer would be clamped.
             )
 
     @classmethod
     def poll(cls, context):
-        return context.active_object.type == 'MESH'
+        if context.active_object != None:
+            if context.active_object.type == 'MESH': 
+                return True
+        return False
 
     def execute(self, context):
         obj = context.active_object
