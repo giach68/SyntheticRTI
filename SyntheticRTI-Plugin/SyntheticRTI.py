@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SyntheticRTI",
     "author": "Andrea Dall'Alba",
-    "version": (0, 2, 1),
+    "version": (0, 2, 2),
     "blender": (2, 79, 0),
     "location": "View3D > Tools > SyntheticRTI",
     "description": "Plugin to help creating the synthetic database for RTI",
@@ -22,7 +22,7 @@ file_lines = []
 ###Various function###
 def create_main(scene):
     """Create the main object if not already present"""
-    #Aggiungo un empty a cui collegare tutte le luci per poter modificarle come gruppo
+    #Add Empty to parent all lights 
  
     if not scene.srti_props.main_parent:
         main_parent = bpy.data.objects.new(name = "main_parent", object_data = None)
@@ -37,6 +37,9 @@ def delete_main(scene):
         scene.srti_props.main_parent.select = True #delete the main parent (need revision)
         scene.srti_props.main_parent = None
         bpy.ops.object.delete()
+        file_lines = []
+        print(file_lines)
+
 
 def format_index(num, tot):
     tot_dig = len(str(tot))
@@ -113,25 +116,24 @@ class create_lamps(bpy.types.Operator):
         main_parent = curr_scene.srti_props.main_parent
 
         file = open(file_path)
-        righe = file.readlines() #copio tutte le linee in memoria
+        rows = file.readlines() #copy all lines in memory
         file.close()
         
-        n_luci = int(righe[0].split()[0])#La prima riga contiene il numero di luci totali
-        #digit_luci = len(str(n_luci)) #ricavo il numero di caratteri massimo per scrivere i numeri delle lampade
-        print(n_luci)
+        n_lights = int(rows[0].split()[0])#in the first row there is the total count of lights
+        print(n_lights)
         
-        ##Uso una luce standard, TODO aggiungere un oggetto
-        lamp_data = bpy.data.lamps.new(name="Luce_progetto", type='SUN') # Create new lamp datablock.  It s going to be created outside
+        ##Use standars light, TODO add a differente object
+        lamp_data = bpy.data.lamps.new(name="Project_light", type='SUN') # Create new lamp datablock.  It s going to be created outside
         
-        for lamp in range(1, n_luci + 1): #passo tutte le luci
-            valori_riga = righe[lamp].split() #divido i valori
+        for lamp in range(1, n_lights + 1): #step trought all lamps
+            valori_riga = rows[lamp].split() #split values
             lmp_x = float(valori_riga[1])
             lmp_y = float(valori_riga[2])
             lmp_z = float(valori_riga[3])
             direction = Vector((lmp_x, lmp_y, lmp_z))
 
-            print(lamp , 'x=', lmp_x, 'y=', lmp_y, 'z=', lmp_z) #stampo i valori per riga
-            lamp_object = bpy.data.objects.new(name="Lampada_{0}".format(format_index(lamp, n_luci)), object_data=lamp_data) # Create new object with our lamp datablock
+            print(lamp , 'x=', lmp_x, 'y=', lmp_y, 'z=', lmp_z) #print all values
+            lamp_object = bpy.data.objects.new(name="Lamp_{0}".format(format_index(lamp, n_lights)), object_data=lamp_data) # Create new object with our lamp datablock
             curr_scene.objects.link(lamp_object) # Link lamp object to the scene so it'll appear in this scene
             lamp_object.parent = main_parent
             lamp_object.location = (lmp_x, lmp_y, lmp_z) # Place lamp to a specified location
@@ -167,6 +169,34 @@ class delete_lamps(bpy.types.Operator):
             delete_main(context.scene)
         
         context.scene.srti_props.list_lights.clear() #delete the idlist
+        return{'FINISHED'}
+
+class delete_active_lamp(bpy.types.Operator):
+    """Delete selected lamp"""
+    bl_idname = "srti.delete_active_lamp"
+    bl_label = "Delete Active Lamp"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        lamp_list = context.scene.srti_props.list_lights
+        active_lamp = context.active_object 
+        i = 0 #need index to delete lamp
+
+        bpy.ops.object.select_all(action='DESELECT')
+
+        if lamp_list:
+            for obj in lamp_list:
+                if obj.light == active_lamp: 
+                    print (obj)
+                    lamp_list.remove(i)
+                    active_lamp.select = True
+                    bpy.ops.object.delete()
+                    break
+                i += 1
+
+        if (not context.scene.srti_props.list_cameras) and len(lamp_list) < 1 : #delete the main object if no cameras and lights
+            delete_main(context.scene)  
+    
         return{'FINISHED'}
 
 ########CAMERA########
@@ -218,6 +248,34 @@ class delete_cameras(bpy.types.Operator):
         
         context.scene.srti_props.list_cameras.clear() #delete the idlist
               
+        return{'FINISHED'}
+
+class delete_active_camera(bpy.types.Operator):
+    """Delete selected camera"""
+    bl_idname = "srti.delete_active_camera"
+    bl_label = "Delete Active Camera"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        camera_list = context.scene.srti_props.list_cameras
+        active_cam = context.active_object 
+        i = 0 #need index to delete lamp
+
+        bpy.ops.object.select_all(action='DESELECT')
+
+        if camera_list:
+            for obj in camera_list:
+                if obj.camera == active_cam: 
+                    print (obj)
+                    camera_list.remove(i)
+                    active_cam.select = True
+                    bpy.ops.object.delete()
+                    break
+                i += 1
+
+        if (not context.scene.srti_props.list_lights) and len(camera_list) < 1 : #delete the main object if no cameras and lights
+            delete_main(context.scene)  
+    
         return{'FINISHED'}
 
 ####ANIMATION########
@@ -375,6 +433,8 @@ class animate_all(bpy.types.Operator):
             
             index_cam = 0
             index_prop += 1
+
+        #self.report({'INFO'}, "Animation complete, total frames = %i" % tot_frames)
             
         return{'FINISHED'}
 
@@ -413,6 +473,10 @@ class create_export_file(bpy.types.Operator):
     bl_idname = "srti.create_file"
     bl_label = "Create file"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return len(file_lines) != 0
     
     def execute(self, context):
         curr_scene = context.scene
@@ -493,17 +557,17 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         file_name = os.path.splitext(bpy.path.basename(file_path))[0]
         project_name = re.split('\d+$', file_name)[0]
         image = bpy.data.images.load(file_path)
-        #check if there isa project number suffix
+        #check if there is a project number suffix
         if file_name[0].isdigit(): 
             project_number = re.split('(^\d+)', file_name)[1]+"-"
         else:
             project_number = ''
 
-        self.report({'OPERATOR'},"file path: " + file_path)
+        self.report({'OPERATOR'}, "file path: " + file_path)
         self.report({'OPERATOR'}, "file name: "+ file_name)
-        self.report({'OPERATOR'},"folder: "+ folder_path)
-        self.report({'OPERATOR'},"project name: "+ project_name)
-        self.report({'OPERATOR'},"project number: "+ project_number)
+        self.report({'OPERATOR'}, "folder: "+ folder_path)
+        self.report({'OPERATOR'}, "project name: "+ project_name)
+        self.report({'OPERATOR'}, "project number: "+ project_number)
 
         #search for minimum and maximum frames
         list_of_files = os.listdir(folder_path)
@@ -513,8 +577,7 @@ class create_export_node(bpy.types.Operator, ImportHelper):
             #print(file)
             if os.path.splitext(file)[1].lower() == ".exr":
                 num = int(re.split('(\d+)(?=\.exr$)', file, flags = re.I)[1])  # assuming filename is "filexxx.exr"
-                #print(num)
-                # compare num to previous max, e.g.
+                #compare num to previous max, e.g.
                 frame_max = num if num > frame_max else frame_max  
                 frame_min = num if num < frame_min else frame_min
     
@@ -696,7 +759,7 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         return{'FINISHED'}
 
 class render_normals(bpy.types.Operator):
-    """Render a nromal map"""
+    """Render a normal map"""
     bl_idname = "srti.render_normals"
     bl_label = "Render Normals"
     bl_options = {'REGISTER'}
@@ -787,6 +850,11 @@ class reset_nodes(bpy.types.Operator):
     bl_idname = "srti.reset_nodes"
     bl_label = "Delete Nodes"
     bl_options = {'REGISTER', 'UNDO' }
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.node_tree != None
+
     def execute(self, context):
         #reset all to normal
         curr_scene = context.scene
@@ -885,10 +953,14 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         layout.prop(curr_scene.srti_props, "light_file_path", text = 'light file')
         row = layout.row(align = True)
         row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
+        row.operator("srti.delete_active_lamp", icon = "X")
         row.operator("srti.delete_lamps", icon = "X")
         row = layout.row(align = True)
         row.operator("srti.create_cameras",icon = "OUTLINER_DATA_CAMERA")
+        row.operator("srti.delete_active_camera", icon = "X")
         row.operator("srti.delete_cameras", icon = "X")
+
+        layout.prop(curr_scene.srti_props, "main_object", text = "Object")
         
         row = layout.row()
         row.template_list("Values_UL_items", "", curr_scene.srti_props, "list_values", curr_scene.srti_props, "selected_value_index", rows=3)
@@ -900,7 +972,7 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         col.operator("srti.values_uilist", icon='TRIA_UP', text="").action = 'UP'
         col.operator("srti.values_uilist", icon='TRIA_DOWN', text="").action = 'DOWN'
 
-        layout.prop(curr_scene.srti_props, "main_object", text = "Object")
+
 
 ###Render
 class SyntheticRTIPanelRender(bpy.types.Panel):
@@ -914,10 +986,10 @@ class SyntheticRTIPanelRender(bpy.types.Panel):
     def draw(self, context):
         curr_scene = context.scene
         layout = self.layout
-        col = layout.column(align = True)
-        col.operator("srti.animate_all", icon ="KEYINGSET")
         layout.prop(curr_scene.srti_props, "output_folder", text = 'Output folder')
         layout.prop(curr_scene.srti_props, "save_name", text = 'Output name')
+        col = layout.column(align = True)
+        col.operator("srti.animate_all", icon ="KEYINGSET")
         col.operator("srti.render_images", icon = "RENDER_ANIMATION")
         col.operator("srti.create_file", icon = "FILE_TEXT")
 
@@ -944,12 +1016,13 @@ class SyntheticRTIPanelTools(bpy.types.Panel):
 
 ###Debug
 class SyntheticRTIPanelDebug(bpy.types.Panel):
-    """Creates a Panel in the Object properties window"""
+    """Creates a Panel in the Object properties window,"""
     bl_label = "Debug"
     bl_idname = "srti.panelDebug"
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_category = "SyntheticRTI"
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         curr_scene = context.scene
@@ -965,12 +1038,15 @@ class SyntheticRTIPanelDebug(bpy.types.Panel):
             main = "None"
 
         box = layout.box()
-        box.label("main = %s" % main)
-        box.label("lamps = %i" % num_light)
-        box.label("cameras = %i" % num_cam)
+        box.label("Main = %s" % main)
+        box.label("Lamps = %i" % num_light)
+        box.label("Cameras = %i" % num_cam)
         box.label("Values = %i" % num_values)
-        box.label("Combnation = %i" % tot_comb)
-        box.label("frame totali = %i" % (num_light * num_cam *tot_comb))
+        box.label("Combination = %i" % tot_comb)
+        box.label("Total frames = %i" % (num_light * num_cam *tot_comb))
+        box.label("Total file lines = %i" %len(file_lines))
+
+        
 
 
  ######RNA PROPERTIES######
@@ -1032,7 +1108,9 @@ def register():
 
     #register operators
     bpy.utils.register_class(delete_lamps)
+    bpy.utils.register_class(delete_active_lamp)
     bpy.utils.register_class(delete_cameras)
+    bpy.utils.register_class(delete_active_camera)
     bpy.utils.register_class(create_lamps)
     bpy.utils.register_class(create_cameras)
     bpy.utils.register_class(create_export_file)
@@ -1066,6 +1144,8 @@ def unregister():
     bpy.utils.unregister_class(create_lamps)
     bpy.utils.unregister_class(delete_cameras)
     bpy.utils.unregister_class(delete_lamps)
+    bpy.utils.unregister_class(delete_active_lamp)
+    bpy.utils.unregister_class(delete_active_camera)
     bpy.utils.unregister_class(create_export_file)
     bpy.utils.unregister_class(render_images)
     bpy.utils.unregister_class(animate_all)
