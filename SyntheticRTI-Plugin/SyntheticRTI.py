@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SyntheticRTI",
     "author": "Andrea Dall'Alba",
-    "version": (0, 2, 2),
+    "version": (0, 3, 0),
     "blender": (2, 79, 0),
     "location": "View3D > Tools > SyntheticRTI",
     "description": "Plugin to help creating the synthetic database for RTI",
@@ -23,12 +23,12 @@ file_lines = []
 def create_main(scene):
     """Create the main object if not already present"""
     #Add Empty to parent all lights 
- 
     if not scene.srti_props.main_parent:
         main_parent = bpy.data.objects.new(name = "main_parent", object_data = None)
         scene.objects.link(main_parent)
         main_parent.empty_draw_type = 'SPHERE'
         scene.srti_props.main_parent = main_parent
+        print("--- Create Main: %s."%main_parent.name)
 
 def delete_main(scene):
     """Delete main parent""" 
@@ -38,8 +38,15 @@ def delete_main(scene):
         scene.srti_props.main_parent = None
         bpy.ops.object.delete()
         file_lines = []
-        print(file_lines)
+        print("--- Delete Main.")
 
+def check_lamp_cam(scene):
+    """Return true if there are lamps or cameras in the scene and, if there is none, it delete the main parent"""
+    if (not scene.srti_props.list_cameras) and (not scene.srti_props.list_lights): #delete the main object if no cameras and lights
+        print("--There are no camera and no lights.")
+        delete_main(scene)
+        return False
+    return True
 
 def format_index(num, tot):
     tot_dig = len(str(tot))
@@ -102,7 +109,7 @@ class create_lamps(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        bpy.ops.srti.delete_lamps() #delete exsisting lamps
+
 
         curr_scene = context.scene
         file_path = curr_scene.srti_props.light_file_path
@@ -110,6 +117,8 @@ class create_lamps(bpy.types.Operator):
         if not os.path.isfile(file_path) or os.path.splitext(file_path)[1] != ".lp":
             self.report({'ERROR'}, 'No valid file selected on '+file_path)
             return {'CANCELLED'}
+
+        bpy.ops.srti.delete_lamps() #delete exsisting lamps
 
         #create the main parent
         create_main(curr_scene)
@@ -120,7 +129,7 @@ class create_lamps(bpy.types.Operator):
         file.close()
         
         n_lights = int(rows[0].split()[0])#in the first row there is the total count of lights
-        print(n_lights)
+        print("- Creating %i lamps ---"%n_lights)
         
         ##Use standars light, TODO add a differente object
         lamp_data = bpy.data.lamps.new(name="Project_light", type='SUN') # Create new lamp datablock.  It s going to be created outside
@@ -132,7 +141,7 @@ class create_lamps(bpy.types.Operator):
             lmp_z = float(valori_riga[3])
             direction = Vector((lmp_x, lmp_y, lmp_z))
 
-            print(lamp , 'x=', lmp_x, 'y=', lmp_y, 'z=', lmp_z) #print all values
+            print("-- ", lamp , 'x=', lmp_x, 'y=', lmp_y, 'z=', lmp_z) #print all values
             lamp_object = bpy.data.objects.new(name="Lamp_{0}".format(format_index(lamp, n_lights)), object_data=lamp_data) # Create new object with our lamp datablock
             curr_scene.objects.link(lamp_object) # Link lamp object to the scene so it'll appear in this scene
             lamp_object.parent = main_parent
@@ -145,6 +154,7 @@ class create_lamps(bpy.types.Operator):
             lamp = curr_scene.srti_props.list_lights.add()
             lamp.light = lamp_object
 
+        self.report({'INFO'},"Created %i lamps."%n_lights)
         return{'FINISHED'}
 
 class delete_lamps(bpy.types.Operator):
@@ -155,7 +165,7 @@ class delete_lamps(bpy.types.Operator):
 
     def execute(self, context):
         lamp_list = context.scene.srti_props.list_lights
-
+        print("- Deleting all lamps ---")
         bpy.ops.object.select_all(action='DESELECT')
 
         if lamp_list:
@@ -165,12 +175,13 @@ class delete_lamps(bpy.types.Operator):
     
         bpy.ops.object.delete()
 
-        if not context.scene.srti_props.list_cameras: #delete the main object if no cameras
-            delete_main(context.scene)
-        
+        self.report({'INFO'},"Deleted all lamps.")
+
         context.scene.srti_props.list_lights.clear() #delete the idlist
+        check_lamp_cam(context.scene)
         return{'FINISHED'}
 
+#DEPRECATED
 class delete_active_lamp(bpy.types.Operator):
     """Delete selected lamp"""
     bl_idname = "srti.delete_active_lamp"
@@ -180,23 +191,18 @@ class delete_active_lamp(bpy.types.Operator):
     def execute(self, context):
         lamp_list = context.scene.srti_props.list_lights
         active_lamp = context.active_object 
-        i = 0 #need index to delete lamp
 
         bpy.ops.object.select_all(action='DESELECT')
 
         if lamp_list:
-            for obj in lamp_list:
+            for index, obj in enumerate(lamp_list):
                 if obj.light == active_lamp: 
                     print (obj)
-                    lamp_list.remove(i)
+                    lamp_list.remove(index)
                     active_lamp.select = True
                     bpy.ops.object.delete()
                     break
-                i += 1
-
-        if (not context.scene.srti_props.list_cameras) and len(lamp_list) < 1 : #delete the main object if no cameras and lights
-            delete_main(context.scene)  
-    
+        check_lamp_cam(context.scene)
         return{'FINISHED'}
 
 ########CAMERA########
@@ -208,7 +214,7 @@ class create_cameras(bpy.types.Operator):
 
     def execute(self, context):
         curr_scene = context.scene
-
+        print("- Creating new camera ---")
         #create the main parent
         create_main(curr_scene)
         main_parent = curr_scene.srti_props.main_parent
@@ -223,6 +229,7 @@ class create_cameras(bpy.types.Operator):
         camera = curr_scene.srti_props.list_cameras.add()
         camera.camera = camera_object
 
+        self.report({'INFO'},"Created camera: %s."%camera.camera.name)
         return{'FINISHED'}
 
 class delete_cameras(bpy.types.Operator):
@@ -234,22 +241,22 @@ class delete_cameras(bpy.types.Operator):
     def execute(self, context):
         curr_scene = context.scene
         camera_list = curr_scene.srti_props.list_cameras
-
+        print("- Deleting all cameras ---")
         bpy.ops.object.select_all(action='DESELECT')
-        
+
         if camera_list:
             for obj in camera_list:
                 obj.camera.select = True
-    
+
         bpy.ops.object.delete()
 
-        if not context.scene.srti_props.list_lights: #delete the main object if no lamps
-             delete_main(context.scene)
-        
         context.scene.srti_props.list_cameras.clear() #delete the idlist
-              
+        check_lamp_cam(context.scene)
+        self.report({'INFO'},"Deleted all cameras")
         return{'FINISHED'}
 
+
+#DEPRECATED
 class delete_active_camera(bpy.types.Operator):
     """Delete selected camera"""
     bl_idname = "srti.delete_active_camera"
@@ -258,24 +265,21 @@ class delete_active_camera(bpy.types.Operator):
 
     def execute(self, context):
         camera_list = context.scene.srti_props.list_cameras
-        active_cam = context.active_object 
-        i = 0 #need index to delete lamp
+        active_cam = context.active_object
 
         bpy.ops.object.select_all(action='DESELECT')
 
         if camera_list:
-            for obj in camera_list:
+            for index, obj in enumerate(camera_list):
                 if obj.camera == active_cam: 
                     print (obj)
-                    camera_list.remove(i)
+                    camera_list.remove(index)
                     active_cam.select = True
                     bpy.ops.object.delete()
                     break
-                i += 1
 
-        if (not context.scene.srti_props.list_lights) and len(camera_list) < 1 : #delete the main object if no cameras and lights
-            delete_main(context.scene)  
-    
+        check_lamp_cam(context.scene)
+
         return{'FINISHED'}
 
 ####ANIMATION########
@@ -286,7 +290,8 @@ class animate_all(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-
+        """Animate all features"""
+        print("- Animating features ---")
         #index
         index_light = 0
         index_cam = 0
@@ -306,18 +311,44 @@ class animate_all(bpy.types.Operator):
         material_list = []
         val_names = {}
 
+        #set renderer to cycle (could be written in a setting file)
+        curr_scene.render.engine = 'CYCLES'
+
+        #Check if objects have been deleted from scene
+        #check lamps
+        print("-- Check for lamps")
+        if lamp_list:
+            for index, obj in sorted(enumerate(lamp_list), reverse=True):
+                print("--- Lamp %i: %s"%(index,obj.light.name))
+                if curr_scene not in obj.light.users_scene:
+                    print("---- Deleted")
+                    self.report({'WARNING'}, "light %s has been deleted." %obj.light.name)
+                    lamp_list.remove(index)
+
+        print("-- Check for cameras")
+        #check cameras
+        if camera_list:
+            for index, obj in sorted(enumerate(camera_list), reverse=True):
+                print("--- Camera %i: %s"%(index,obj.camera.name))
+                if curr_scene not in obj.camera.users_scene:
+                    print("---- Deleted")
+                    self.report({'WARNING'}, "Camera %s has been deleted." %obj.camera.name)
+                    camera_list.remove(index)
+
+        #if no camera and no lamp: delete main
+        check_lamp_cam(curr_scene)
+
+
         #generated value
         tot_light = max(len(lamp_list),1) #at least we want to iterate one frame over the camera when there are no lights
         tot_cam = len(camera_list)
-
-        #set renderer to cycle (could be written in a setting file)
-        curr_scene.render.engine = 'CYCLES'
-        
+            
         #Abort if no camera in scene
         if tot_cam < 1:
             self.report({'ERROR'}, "There are no cameras in the scene.")
             return{'CANCELLED'}
 
+        #Clear file lines
         file_lines.clear()
 
         #If there is no object selected we only iterate over cameras and lamps
@@ -362,9 +393,12 @@ class animate_all(bpy.types.Operator):
             print (all_values)
             tot_comb = numpy.prod(list(row.steps for row in values))
 
-        print("---out---")
+        print("--- output list: ")
+        print("---- materials: ")
         print(material_list)
-        print (all_values)
+        print("---- values: ")
+        print(all_values)
+        print("---- file lines: ")
         print(file_lines)
 
         #Set animation boundaries
@@ -953,11 +987,11 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         layout.prop(curr_scene.srti_props, "light_file_path", text = 'light file')
         row = layout.row(align = True)
         row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
-        row.operator("srti.delete_active_lamp", icon = "X")
+        #row.operator("srti.delete_active_lamp", icon = "X")
         row.operator("srti.delete_lamps", icon = "X")
         row = layout.row(align = True)
         row.operator("srti.create_cameras",icon = "OUTLINER_DATA_CAMERA")
-        row.operator("srti.delete_active_camera", icon = "X")
+        #row.operator("srti.delete_active_camera", icon = "X")
         row.operator("srti.delete_cameras", icon = "X")
 
         layout.prop(curr_scene.srti_props, "main_object", text = "Object")
@@ -971,8 +1005,6 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         col.separator()
         col.operator("srti.values_uilist", icon='TRIA_UP', text="").action = 'UP'
         col.operator("srti.values_uilist", icon='TRIA_DOWN', text="").action = 'DOWN'
-
-
 
 ###Render
 class SyntheticRTIPanelRender(bpy.types.Panel):
