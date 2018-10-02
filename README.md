@@ -10,6 +10,8 @@ Currently the plugin is developed for Blender version 2.79 and uses only the cyc
 To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the file `SyntheticRTI.py` and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
 
 ## Usage
+![plugin](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/plugin_full.png)
+
 The plugin is divided in 4 panels:
 - **Create**: its mainly purpose is to create lamps, cameras and to manage the material parameters we want to iterate over the combinations;
 - **Render**: it prepares the environment for rendering;
@@ -94,7 +96,11 @@ For a total of 10 frames.
     - Par 2 = 1  
     -- …
 
-**Set Render**: set the render output path: `output_folder/EXR/name-frame_number`, the format to be .exr 32bit and the following render passes on:  
+**Set Render**: set the render output path: `output_folder/EXR/name-frame_number`, the format to be .exr 32bit.
+
+![output](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/output.png)
+
+It also set the following render passes on:  
 - Normal;  
 - Shadow  
 - Diffuse Direct;  
@@ -103,6 +109,8 @@ For a total of 10 frames.
 - Glossy Direct;  
 - Glossy Indirect;  
 - Glossy Color.
+
+![steps](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/passes.png)
 
 **Create file**: save the output .csv file in the output folder with the name given. It contains all the coordinates of lamps and parameters value (camera positions and parameters still need implementation).  
 
