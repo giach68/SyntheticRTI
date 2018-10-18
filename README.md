@@ -1,6 +1,8 @@
+![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.0-yellow.svg)
 # SyntheticRTI
 Creation of synthetic datasets for RTI and Photometric Stereo applications
 - [Introduction](https://github.com/giach68/SyntheticRTI#introduction)
+- [Download](https://github.com/giach68/SyntheticRTI#download)
 - [Installation](https://github.com/giach68/SyntheticRTI#installation)
 - [Usage](https://github.com/giach68/SyntheticRTI#usage)
   - [Create](https://github.com/giach68/SyntheticRTI#create)
@@ -12,8 +14,12 @@ SyntheticRTI is a Blender plugin built to help create a synthetic database of 3d
 
 Currently the plugin is developed for Blender version 2.79 and uses only the cycles renderer.
 
+## Download
+You can clone the whole project or download just the zipped plugin from here: [Download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/giach68/SyntheticRTI/tree/develop/SyntheticRTI-Plugin)
+
 ## Installation
-To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the file `SyntheticRTI.py` and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
+If you cloned the project you have to first zip the `SyntheticRTI-Plugin` folder.
+To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the file `SyntheticRTI-Plugin.zip` and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
 
 ## Usage
 ![plugin](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/plugin_full.png)
