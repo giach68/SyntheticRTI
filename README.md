@@ -1,21 +1,21 @@
 ![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.0-yellow.svg)
 # SyntheticRTI
 Creation of synthetic datasets for RTI and Photometric Stereo applications
-- [Introduction](https://github.com/giach68/SyntheticRTI#introduction)
-- [Download](https://github.com/giach68/SyntheticRTI#download)
-- [Installation](https://github.com/giach68/SyntheticRTI#installation)
-- [Usage](https://github.com/giach68/SyntheticRTI#usage)
-  - [Create](https://github.com/giach68/SyntheticRTI#create)
-  - [Render](https://github.com/giach68/SyntheticRTI#render)
-  - [Tools](https://github.com/giach68/SyntheticRTI#tools)
-- [Various](https://github.com/giach68/SyntheticRTI#various)
+- [Introduction](https://github.com/giach68/SyntheticRTI/tree/Develop#introduction)
+- [Download](https://github.com/giach68/SyntheticRTI/tree/Develop#download)
+- [Installation](https://github.com/giach68/SyntheticRTI/tree/Develop#installation)
+- [Usage](https://github.com/giach68/SyntheticRTI/tree/Develop#usage)
+  - [Create](https://github.com/giach68/SyntheticRTI/tree/Develop#create)
+  - [Render](https://github.com/giach68/SyntheticRTI/tree/Develop#render)
+  - [Tools](https://github.com/giach68/SyntheticRTI/tree/Develop#tools)
+- [Various](https://github.com/giach68/SyntheticRTI/tree/Develop#various)
 ## Introduction
 SyntheticRTI is a Blender plugin built to help create a synthetic database of 3d scanned images to train and test algorithms on.
 
 Currently the plugin is developed for Blender version 2.79 and uses only the cycles renderer.
 
 ## Download
-You can clone the whole project or download just the zipped plugin from here: [Download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/giach68/SyntheticRTI/tree/develop/SyntheticRTI-Plugin)
+You can clone the whole project or download just the zipped plugin from here: [Download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/giach68/SyntheticRTI/tree/Develop/SyntheticRTI-Plugin)
 
 ## Installation
 If you cloned the project you have to first zip the `SyntheticRTI-Plugin` folder.
