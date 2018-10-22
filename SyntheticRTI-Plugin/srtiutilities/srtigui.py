@@ -4,8 +4,8 @@
 
 import bpy
 import numpy
-from ..srtifunc import *
-from ..srtiproperties import file_lines as file_lines
+from .srtifunc import *
+from .srtiproperties import file_lines as file_lines
 
 class Values_UL_items(bpy.types.UIList):
 

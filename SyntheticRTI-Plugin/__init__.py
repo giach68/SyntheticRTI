@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SyntheticRTI",
     "author": "Andrea Dall'Alba",
-    "version": (0, 4, 0),
+    "version": (0, 4, 1),
     "blender": (2, 79, 0),
     "location": "View3D > Tools > SyntheticRTI",
     "description": "Plugin to help creating the synthetic database for RTI",
@@ -10,17 +10,7 @@ bl_info = {
     "category": "3D View",
 }
 
-
-
 import bpy
-
-
-
-
-
-
-
-
 
 # load and reload submodules
 ##################################

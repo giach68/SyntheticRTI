@@ -1,4 +1,4 @@
-![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.0-yellow.svg)
+![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.1-yellow.svg)
 # SyntheticRTI
 Creation of synthetic datasets for RTI and Photometric Stereo applications
 - [Introduction](https://github.com/giach68/SyntheticRTI/tree/Develop#introduction)
