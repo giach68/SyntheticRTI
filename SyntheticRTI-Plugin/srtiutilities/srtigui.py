@@ -7,17 +7,20 @@ import numpy
 from .srtifunc import *
 from .srtiproperties import file_lines as file_lines
 
+##list of properties
 class Values_UL_items(bpy.types.UIList):
-
+    
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        row = layout.row()
-        row.alignment = 'LEFT'
-        #row.label("Id: %d" % (index))
-        row.prop(item, "name", text="", emboss=False, translate=False)
-        row2 = row.row(align = True)
+#        box = layout.box()
+#        row = box.row(align = True)
+#        row.alignment = 'LEFT'
+        col1 = layout.column()
+        col1.prop(item, "name", text="", emboss=False, translate=False, icon='ACTION')
+        row2 = col1.row(align = True)
         row2.prop(item,"min")
         row2.prop(item,"max")
         row2.prop(item,"steps")
+        col1.separator()
 
     def invoke(self, context, event):
         pass   
@@ -35,21 +38,25 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         curr_scene = context.scene
 
         layout = self.layout
+        
+        #light
         layout.prop(curr_scene.srti_props, "light_file_path", text = 'light file')
         row = layout.row(align = True)
         row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
-        #row.operator("srti.delete_active_lamp", icon = "X")
         row.operator("srti.delete_lamps", icon = "X")
+        
+        #camera
         row = layout.row(align = True)
         row.operator("srti.create_cameras",icon = "OUTLINER_DATA_CAMERA")
-        #row.operator("srti.delete_active_camera", icon = "X")
         row.operator("srti.delete_cameras", icon = "X")
-
+        
+        #object
         layout.prop(curr_scene.srti_props, "main_object", text = "Object")
+        
+        #Parameters
         layout.label("Parameters:", icon='ACTION')
         row = layout.row()
-        row.template_list("Values_UL_items", "", curr_scene.srti_props, "list_values", curr_scene.srti_props, "selected_value_index", rows=3)
-
+        row.template_list("Values_UL_items", "", curr_scene.srti_props, "list_values", curr_scene.srti_props, "selected_value_index", rows=2)
         col = row.column(align=True)
         col.operator("srti.values_uilist", icon='ZOOMIN', text="").action = 'ADD'
         col.operator("srti.values_uilist", icon='ZOOMOUT', text="").action = 'REMOVE'

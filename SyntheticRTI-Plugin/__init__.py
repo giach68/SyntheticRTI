@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SyntheticRTI",
     "author": "Andrea Dall'Alba",
-    "version": (0, 4, 1),
+    "version": (0, 4, 2),
     "blender": (2, 79, 0),
     "location": "View3D > Tools > SyntheticRTI",
     "description": "Plugin to help creating the synthetic database for RTI",
@@ -21,7 +21,6 @@ importlib.reload(developer_utils)
 modules = developer_utils.setup_addon_modules(__path__, __name__, "bpy" in locals())
 from .srtiutilities import srtiproperties 
 srtiproperties.register()
-
 
 # register
 ##################################

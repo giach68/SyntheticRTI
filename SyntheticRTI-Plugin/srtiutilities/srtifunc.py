@@ -44,11 +44,21 @@ def calculate_tot_frame(context):
     tot_comb = numpy.prod(list(row.steps for row in curr_scene.srti_props.list_values))
     return int(num_light * num_cam * max(tot_comb,1))
 
-#TODO implement
-def get_unice_value_name(name, list):
-    """Give a unique name in a list""" 
-    return name
-
+def update_value_name(self, context):
+    """Check all value names and add numbers if there are equal names"""
+    #could be better but work for small numbers of values
+    value_list = context.scene.srti_props.list_values
+    
+    #External loop is implicit because when the name change a new check is triggered so we have a "free" recursive system 
+    for i,elem in enumerate(value_list[1:]): #index from enumeration of values starting from the second element
+        for old_elem in value_list[0:i+1]: #add 1 to index becouse i start from 0 not 1 after taking away the first element
+            if old_elem.name == elem.name:
+                if old_elem.name[-3:].isdigit(): #if there is already a number we increase it
+                    index = int(elem.name[-3:]) + 1
+                    elem.name = elem.name[0:-4]+".{0:03}".format(index) #trigger the new update_value_name function
+                else: #we add .001 at the end of the name
+                    elem.name +=".001" #trigger the new update_value_name function
+        
 def set_render_exr(scene):
     """Prepare the render setting""" 
     #set cycles as renderer  

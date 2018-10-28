@@ -1,5 +1,6 @@
 
 import bpy
+from .srtifunc import *
 
 ####Global values###
 file_lines = []
@@ -17,6 +18,7 @@ class camera(bpy.types.PropertyGroup):
         description = "A camera")
 
 class value(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(update = update_value_name)
     min = bpy.props.FloatProperty(default = 0)
     max = bpy.props.FloatProperty(default = 1)
     steps = bpy.props.IntProperty(default = 2, min = 2)
