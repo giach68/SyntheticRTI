@@ -1,22 +1,28 @@
+![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.4-yellow.svg)
 # SyntheticRTI
 Creation of synthetic datasets for RTI and Photometric Stereo applications
-- [Introduction](https://github.com/giach68/SyntheticRTI#introduction)
-- [Installation](https://github.com/giach68/SyntheticRTI#installation)
-- [Usage](https://github.com/giach68/SyntheticRTI#usage)
-  - [Create](https://github.com/giach68/SyntheticRTI#create)
-  - [Render](https://github.com/giach68/SyntheticRTI#render)
-  - [Tools](https://github.com/giach68/SyntheticRTI#tools)
-- [Various](https://github.com/giach68/SyntheticRTI#various)
+- [Introduction](https://github.com/giach68/SyntheticRTI/tree/Develop#introduction)
+- [Download](https://github.com/giach68/SyntheticRTI/tree/Develop#download)
+- [Installation](https://github.com/giach68/SyntheticRTI/tree/Develop#installation)
+- [Usage](https://github.com/giach68/SyntheticRTI/tree/Develop#usage)
+  - [Create](https://github.com/giach68/SyntheticRTI/tree/Develop#create)
+  - [Render](https://github.com/giach68/SyntheticRTI/tree/Develop#render)
+  - [Tools](https://github.com/giach68/SyntheticRTI/tree/Develop#tools)
+- [Various](https://github.com/giach68/SyntheticRTI/tree/Develop#various)
 ## Introduction
 SyntheticRTI is a Blender plugin built to help create a synthetic database of 3d scanned images to train and test algorithms on.
 
 Currently the plugin is developed for Blender version 2.79 and uses only the cycles renderer.
 
+## Download
+You can clone the whole project or download just the zipped plugin from here: [Download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/giach68/SyntheticRTI/tree/Develop/SyntheticRTI-Plugin)
+
 ## Installation
-To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the file `SyntheticRTI.py` and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
+If you cloned the project you have to first zip the `SyntheticRTI-Plugin` folder.
+To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the file `SyntheticRTI-Plugin.zip` and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
 
 ## Usage
-![plugin](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/plugin_full.png)
+![plugin](https://github.com/giach68/SyntheticRTI/blob/Develop/Documentation/plugin_full.png)
 
 The plugin is divided in 4 panels:
 - **Create**: its mainly purpose is to create lamps, cameras and to manage the material parameters we want to iterate over the combinations;
@@ -88,9 +94,13 @@ To apply the parameters to the material the object must have at least one materi
 ![material node](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/node_example.png)
 
 ## Render
-**Output folder**: the path where to save the output files.
+**Output folder**: the path where to save the output files. It use the current blend file path if saved. It's possible to overwrite it.
 
-**Output name**: the name of the project. (Must be changed before the Animate all operation!)
+**Output name**: the name of the project. It use the current blend file name if saved. It's possible to overwrite it.
+
+> Overwrite example:
+
+![overwrite example](https://github.com/giach68/SyntheticRTI/blob/Develop/Documentation/export_overwrite.png)
 
 **Animate all**: it creates the animation which iterates over all parameters, all cameras and all lights in this specific order. It needs at least one Camera to work.  
 
