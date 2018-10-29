@@ -4,6 +4,7 @@
 
 import bpy
 import numpy
+import os
 from .srtifunc import *
 from .srtiproperties import file_lines as file_lines
 
@@ -15,7 +16,7 @@ class Values_UL_items(bpy.types.UIList):
 #        row = box.row(align = True)
 #        row.alignment = 'LEFT'
         col1 = layout.column()
-        col1.prop(item, "name", text="", emboss=False, translate=False, icon='ACTION')
+        col1.prop(item, "name", text="", emboss=False, translate=False, icon='BUTS')
         row2 = col1.row(align = True)
         row2.prop(item,"min")
         row2.prop(item,"max")
@@ -40,7 +41,7 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         layout = self.layout
         
         #light
-        layout.prop(curr_scene.srti_props, "light_file_path", text = 'light file')
+        layout.prop(curr_scene.srti_props, "light_file_path", text = 'Light file', icon = "LAMP_SPOT")
         row = layout.row(align = True)
         row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
         row.operator("srti.delete_lamps", icon = "X")
@@ -76,8 +77,36 @@ class SyntheticRTIPanelRender(bpy.types.Panel):
     def draw(self, context):
         curr_scene = context.scene
         layout = self.layout
-        layout.prop(curr_scene.srti_props, "output_folder", text = 'Output folder')
-        layout.prop(curr_scene.srti_props, "save_name", text = 'Output name')
+        
+        #output folder
+        box = layout.box()
+        if curr_scene.srti_props.overwrite_folder: #if we want to overwrite
+            box.label("Output folder = "+curr_scene.srti_props.output_folder, icon = "FILE_FOLDER")          
+            box.prop(curr_scene.srti_props, "overwrite_folder")
+            box.prop(curr_scene.srti_props, "output_folder", text = 'Output folder')
+        else: #standard output taken from the saved blender file
+            if context.blend_data.is_saved: # if the file is saved
+                box.label("Output folder = "+os.path.dirname(context.blend_data.filepath), icon = "FILE_FOLDER")
+            else:
+                box.label("Output folder = *Must save the file*", icon = "ERROR")
+                
+            box.prop(curr_scene.srti_props, "overwrite_folder")
+
+            
+        #output name    
+        box = layout.box()
+        if curr_scene.srti_props.overwrite_name: #if we want to overwrite
+            box.label("Output name = "+curr_scene.srti_props.save_name, icon = "SORTALPHA")
+            box.prop(curr_scene.srti_props, "overwrite_name")
+            box.prop(curr_scene.srti_props, "save_name", text = 'Output name')
+        else: #standard name taken from the saved blender file
+            if context.blend_data.is_saved: # if the file is saved
+                box.label("Output name = "+bpy.path.display_name(context.blend_data.filepath), icon = "SORTALPHA")
+            else:
+                box.label("Output name = *Must save the file*", icon = "ERROR")
+                
+            box.prop(curr_scene.srti_props, "overwrite_name")
+        
         col = layout.column(align = True)
         col.operator("srti.animate_all", icon ="KEYINGSET")
         col.operator("srti.render_images", icon = "RENDER_ANIMATION")

@@ -1,4 +1,4 @@
-![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.3-yellow.svg)
+![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.4-yellow.svg)
 # SyntheticRTI
 Creation of synthetic datasets for RTI and Photometric Stereo applications
 - [Introduction](https://github.com/giach68/SyntheticRTI/tree/Develop#introduction)
@@ -94,9 +94,13 @@ To apply the parameters to the material the object must have at least one materi
 ![material node](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/node_example.png)
 
 ## Render
-**Output folder**: the path where to save the output files.
+**Output folder**: the path where to save the output files. It use the current blend file path if saved. It's possible to overwrite it.
 
-**Output name**: the name of the project. (Must be changed before the Animate all operation!)
+**Output name**: the name of the project. It use the current blend file name if saved. It's possible to overwrite it.
+
+> Overwrite example:
+
+![overwrite example](https://github.com/giach68/SyntheticRTI/blob/Develop/Documentation/export_overwrite.png)
 
 **Animate all**: it creates the animation which iterates over all parameters, all cameras and all lights in this specific order. It needs at least one Camera to work.  
 

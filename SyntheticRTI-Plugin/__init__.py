@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SyntheticRTI",
     "author": "Andrea Dall'Alba",
-    "version": (0, 4, 3),
+    "version": (0, 4, 4),
     "blender": (2, 79, 0),
     "location": "View3D > Tools > SyntheticRTI",
     "description": "Plugin to help creating the synthetic database for RTI",

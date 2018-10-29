@@ -1,6 +1,7 @@
 
 import bpy
 import numpy
+import os
 
 ###Various function###
 def create_main(scene):
@@ -93,3 +94,16 @@ def set_render_exr(scene):
     curr_rend_layer.use_pass_glossy_indirect = True
     curr_rend_layer.use_pass_glossy_color = True
   
+def get_export_folder_path(context):
+    """Get export folder path. Return empty string if the file is not saved and/or there is no overwrite name"""
+    save_dir = os.path.dirname(context.blend_data.filepath)
+    if context.scene.srti_props.overwrite_folder:
+        save_dir = context.scene.srti_props.output_folder
+    return save_dir
+
+def get_export_name(context):
+    """Get export name. Return empty string if the file is not saved and/or there is no overwrite name"""
+    file_name = bpy.path.display_name(context.blend_data.filepath)
+    if context.scene.srti_props.overwrite_name:
+        file_name = context.scene.srti_props.save_name
+    return file_name

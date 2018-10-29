@@ -2,6 +2,7 @@
 import bpy
 import numpy
 import itertools
+import os
 from ..srtifunc import *
 from ..srtiproperties import file_lines as file_lines
 ####ANIMATION########
@@ -204,8 +205,9 @@ class render_images(bpy.types.Operator):
     
     def execute(self, context):
         curr_scene = context.scene
-        file_name = curr_scene.srti_props.save_name
-        save_dir = curr_scene.srti_props.output_folder
+        
+        save_dir = get_export_folder_path(context)
+        file_name = get_export_name(context)
         
         #error if file path not set
         if save_dir == '':
@@ -216,7 +218,7 @@ class render_images(bpy.types.Operator):
             max_digit = len(str(calculate_tot_frame(context)))
             
             #set render path for local rendering
-            curr_scene.render.filepath = "{0}/EXR/{1}-{2}".format(save_dir[:-1],file_name,"#"*max_digit)
+            curr_scene.render.filepath = "{0}/EXR/{1}-{2}".format(save_dir,file_name,"#"*max_digit)
 
             #set render settings
             set_render_exr(curr_scene)
@@ -238,8 +240,9 @@ class create_export_file(bpy.types.Operator):
     
     def execute(self, context):
         curr_scene = context.scene
-        file_name = curr_scene.srti_props.save_name
-        save_dir = curr_scene.srti_props.output_folder
+        
+        save_dir = get_export_folder_path(context)
+        file_name = get_export_name(context)
         
         #error if file path not set
         if save_dir == '':
@@ -247,7 +250,7 @@ class create_export_file(bpy.types.Operator):
             return{'CANCELLED'}
         else:       
             #create the file
-            file_path = bpy.path.abspath(save_dir+file_name+".csv")
+            file_path = bpy.path.abspath(save_dir+'/'+file_name+".csv")
             file = open(file_path, "w")
             
             #first we print the firt line with headers
