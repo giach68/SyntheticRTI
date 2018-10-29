@@ -177,7 +177,8 @@ class animate_all(bpy.types.Operator):
                     lamp.keyframe_insert(data_path = 'hide', frame = curr_frame)
 
                     #add a line for the files with all the details
-                    string = "%s-%s,%f,%f,%f" % (file_name, format_index(curr_frame, tot_frames), lamp.location[0], lamp.location[1], lamp.location[2])
+                    #filename will be added at export time in create_export_file
+                    string = "-%s,%f,%f,%f" % (format_index(curr_frame, tot_frames), lamp.location[0], lamp.location[1], lamp.location[2])
                     if curr_val:
                         string += ","+ ",".join(str(x) for x in curr_val)
                     file_lines.append(string)
@@ -205,44 +206,60 @@ class render_images(bpy.types.Operator):
         curr_scene = context.scene
         file_name = curr_scene.srti_props.save_name
         save_dir = curr_scene.srti_props.output_folder
+        
+        #error if file path not set
+        if save_dir == '':
+            self.report({'ERROR'}, "File path not set!")
+            return{'CANCELLED'}
+        else: 
+            #calculate max numbers of digit for file name
+            max_digit = len(str(calculate_tot_frame(context)))
+            
+            #set render path for local rendering
+            curr_scene.render.filepath = "{0}/EXR/{1}-{2}".format(save_dir[:-1],file_name,"#"*max_digit)
 
+            #set render settings
+            set_render_exr(curr_scene)
+            
+            self.report({'INFO'}, "Render output set.")
 
-        #TODO not usable with relative path
-        #if not os.path.isdir(save_dir): #Check if path is set
-        #    self.report({'ERROR'}, "No filepath.")
-        #    return{'CANCELLED'}
-
-        #TODO parametrize all export setting in a file for presets
-        max_digit = len(str(calculate_tot_frame(context)))
-        curr_scene.render.filepath = "{0}/EXR/{1}-{2}".format(save_dir[:-1],file_name,"#"*max_digit)
-
-        #set render settings
-        set_render_exr(curr_scene)
-
-        #bpy.ops.render.view_show()
-        #bpy.ops.render.render(animation=True)
-
-        return{'FINISHED'}
+            return{'FINISHED'}
 
 class create_export_file(bpy.types.Operator):
-    """Create a file with all the images name and parameters"""
+    """Create a .csv file with all the images name and parameters"""
     bl_idname = "srti.create_file"
     bl_label = "Create file"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
+        #if we have no lines we 
         return len(file_lines) != 0
     
     def execute(self, context):
         curr_scene = context.scene
         file_name = curr_scene.srti_props.save_name
         save_dir = curr_scene.srti_props.output_folder
-
-        file = open(bpy.path.abspath(save_dir+file_name+".csv"), "w")
-        for line in file_lines:
-            file.write(line)
+        
+        #error if file path not set
+        if save_dir == '':
+            self.report({'ERROR'}, "File path not set!")
+            return{'CANCELLED'}
+        else:       
+            #create the file
+            file_path = bpy.path.abspath(save_dir+file_name+".csv")
+            file = open(file_path, "w")
+            
+            #first we print the firt line with headers
+            file.write(file_lines[0])
             file.write('\n')
-        file.close()
+            
+            #then we write all the others line with added images names (image index already added in animate_all function)
+            for line in file_lines[1:]:
+                file.write(file_name+line)
+                file.write('\n')
+            file.close()
+            
+            self.report({'INFO'}, "File %s successfully written."%file_path)
 
-        return{'FINISHED'}
+            return{'FINISHED'}

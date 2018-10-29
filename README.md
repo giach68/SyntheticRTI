@@ -1,4 +1,4 @@
-![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.2-yellow.svg)
+![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.3-yellow.svg)
 # SyntheticRTI
 Creation of synthetic datasets for RTI and Photometric Stereo applications
 - [Introduction](https://github.com/giach68/SyntheticRTI/tree/Develop#introduction)
@@ -22,7 +22,7 @@ If you cloned the project you have to first zip the `SyntheticRTI-Plugin` folder
 To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the file `SyntheticRTI-Plugin.zip` and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
 
 ## Usage
-![plugin](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/plugin_full.png)
+![plugin](https://github.com/giach68/SyntheticRTI/blob/Develop/Documentation/plugin_full.png)
 
 The plugin is divided in 4 panels:
 - **Create**: its mainly purpose is to create lamps, cameras and to manage the material parameters we want to iterate over the combinations;
