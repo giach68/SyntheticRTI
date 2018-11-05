@@ -81,7 +81,15 @@ class srti_props(bpy.types.PropertyGroup):
     R_FN_save_name = bpy.props.StringProperty(name="Save file name",
         default = "Image",
         description = "Export file name")
-        
+    
+    #---tools properties:
+    
+    #--Node export(T_NE)
+    #boolean to enable Tools: node export
+    T_NE_enable_node_exp = bpy.props.BoolProperty(name = "Enable node export",
+        default = False,
+        description = "Enable node export")
+
     #modified = bpy.props.BoolProperty(name = "Boolean if not animated", default = True)
 
 

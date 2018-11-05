@@ -37,11 +37,11 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
 
     def draw(self, context):
         curr_scene = context.scene
-
+        props = curr_scene.srti_props
         layout = self.layout
         
         #light
-        layout.prop(curr_scene.srti_props, "C_L_light_file_path", text = 'Light file', icon = "LAMP_SPOT")
+        layout.prop(props, "C_L_light_file_path", text = 'Light file', icon = "LAMP_SPOT")
         row = layout.row(align = True)
         row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
         row.operator("srti.delete_lamps", icon = "X")
@@ -57,7 +57,7 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         #Parameters
         layout.label("Parameters:", icon='ACTION')
         row = layout.row()
-        row.template_list("Values_UL_items", "", curr_scene.srti_props, "C_V_list_values", curr_scene.srti_props, "C_V_selected_value_index", rows=2)
+        row.template_list("Values_UL_items", "", props, "C_V_list_values", props, "C_V_selected_value_index", rows=2)
         col = row.column(align=True)
         col.operator("srti.values_uilist", icon='ZOOMIN', text="").action = 'ADD'
         col.operator("srti.values_uilist", icon='ZOOMOUT', text="").action = 'REMOVE'
@@ -76,21 +76,22 @@ class SyntheticRTIPanelRender(bpy.types.Panel):
 
     def draw(self, context):
         curr_scene = context.scene
+        props = curr_scene.srti_props
         layout = self.layout
         
         #output folder
         box = layout.box()
-        if curr_scene.srti_props.R_FP_overwrite_folder: #if we want to overwrite
-            box.label("Output folder = "+curr_scene.srti_props.R_FP_output_folder, icon = "FILE_FOLDER")          
-            box.prop(curr_scene.srti_props, "R_FP_overwrite_folder")
-            box.prop(curr_scene.srti_props, "R_FP_output_folder", text = 'Output folder')
+        if props.R_FP_overwrite_folder: #if we want to overwrite
+            box.label("Output folder = "+props.R_FP_output_folder, icon = "FILE_FOLDER")          
+            box.prop(props, "R_FP_overwrite_folder")
+            box.prop(props, "R_FP_output_folder", text = 'Output folder')
         else: #standard output taken from the saved blender file
             if context.blend_data.is_saved: # if the file is saved
                 box.label("Output folder = "+os.path.dirname(context.blend_data.filepath), icon = "FILE_FOLDER")
             else:
                 box.label("Output folder = *Must save the file*", icon = "ERROR")
                 
-            box.prop(curr_scene.srti_props, "R_FP_overwrite_folder")
+            box.prop(props, "R_FP_overwrite_folder")
 
             
         #output name    
@@ -123,14 +124,22 @@ class SyntheticRTIPanelTools(bpy.types.Panel):
 
     def draw(self, context):
         curr_scene = context.scene
+        props = curr_scene.srti_props
         layout = self.layout
+        
+        #Export lamp
         layout.operator("srti.export_lamp", icon = "FILE_TEXT")
-        col = layout.column(align = True)
-        col.operator("srti.create_export_node", icon = "NODETREE")
-        row = col.row(align = True)
-        row.operator("srti.render_normals", icon = 'MOD_NORMALEDIT')
-        row.operator("srti.render_composite", icon = 'GROUP_VCOL')
-        col.operator("srti.reset_nodes", icon = "X")
+        
+        #Export nodes
+        box_node_exp = layout.box()
+        box_node_exp.prop(props, "T_NE_enable_node_exp", text = "Export Nodes", icon = "TRIA_DOWN" if props.T_NE_enable_node_exp else "TRIA_RIGHT", emboss = False)
+        if props.T_NE_enable_node_exp:
+            col = box_node_exp.column(align = True)
+            col.operator("srti.create_export_node", icon = "NODETREE")
+            row = col.row(align = True)
+            row.operator("srti.render_normals", icon = 'MOD_NORMALEDIT')
+            row.operator("srti.render_composite", icon = 'GROUP_VCOL')
+            col.operator("srti.reset_nodes", icon = "X")
 
 
 ###Debug

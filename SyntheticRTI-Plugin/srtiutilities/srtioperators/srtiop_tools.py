@@ -269,6 +269,18 @@ class create_export_node(bpy.types.Operator, ImportHelper):
         curr_scene.use_nodes = True
         curr_scene.frame_end = frame_max
         curr_scene.frame_start = 1
+        
+        #set output format
+        curr_scene.render.image_settings.file_format = 'PNG'
+        curr_scene.render.image_settings.color_mode = 'RGB'
+        curr_scene.render.image_settings.color_depth = '16'
+        curr_scene.render.image_settings.compression = 0
+
+        #set color management to linear
+        curr_scene.display_settings.display_device = 'None'
+        
+        #set rendering to not overwrrite
+        curr_scene.render.use_overwrite = True
 
         return{'FINISHED'}
 
@@ -314,6 +326,9 @@ class render_normals(bpy.types.Operator):
         #render normal
         bpy.ops.render.render("INVOKE_DEFAULT")
         #bpy.ops.render.view_cancel()
+        
+        #change normal name
+        #TODO
 
         return{'FINISHED'}
 
@@ -339,22 +354,11 @@ class render_composite(bpy.types.Operator):
         node_out_normal.mute = True
         node_out_composite.mute = False
         curr_scene.frame_current = 1
-        #set output format
-        curr_scene.render.image_settings.file_format = 'PNG'
-        curr_scene.render.image_settings.color_mode = 'RGB'
-        curr_scene.render.image_settings.color_depth = '16'
-        curr_scene.render.image_settings.compression = 0
-
+        
         #enable compositor
         curr_scene.render.use_compositing = True
         curr_scene.use_nodes = True
 
-        #set color management to linear
-        curr_scene.display_settings.display_device = 'None'
-        
-        #set rendering to not overwrrite
-        curr_scene.render.use_overwrite = True
- 
         #render composite animation
         bpy.ops.render.render("INVOKE_DEFAULT", animation = True, write_still=False)
         return{'FINISHED'}
