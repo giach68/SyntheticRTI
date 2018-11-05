@@ -16,7 +16,8 @@ class create_lamps(bpy.types.Operator):
 
 
         curr_scene = context.scene
-        file_path = curr_scene.srti_props.light_file_path
+        props = curr_scene.srti_props
+        file_path = props.C_L_light_file_path
 
         if not os.path.isfile(file_path) or os.path.splitext(file_path)[1] != ".lp":
             self.report({'ERROR'}, 'No valid file selected on '+file_path)
@@ -26,7 +27,7 @@ class create_lamps(bpy.types.Operator):
 
         #create the main parent
         create_main(curr_scene)
-        main_parent = curr_scene.srti_props.main_parent
+        main_parent = props.C_C_main_parent
 
         file = open(file_path)
         rows = file.readlines() #copy all lines in memory
@@ -55,7 +56,7 @@ class create_lamps(bpy.types.Operator):
             lamp_object.rotation_quaternion = direction.to_track_quat('Z','Y')
             
             ##change the name
-            lamp = curr_scene.srti_props.list_lights.add()
+            lamp = props.C_L_list_lights.add()
             lamp.light = lamp_object
 
         self.report({'INFO'},"Created %i lamps."%n_lights)
@@ -68,7 +69,9 @@ class delete_lamps(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        lamp_list = context.scene.srti_props.list_lights
+        curr_scene = context.scene
+        props = curr_scene.srti_props
+        lamp_list = props.C_L_list_lights
         print("- Deleting all lamps ---")
         bpy.ops.object.select_all(action='DESELECT')
 
@@ -81,33 +84,35 @@ class delete_lamps(bpy.types.Operator):
 
         self.report({'INFO'},"Deleted all lamps.")
 
-        context.scene.srti_props.list_lights.clear() #delete the idlist
-        check_lamp_cam(context.scene)
+        props.C_L_list_lights.clear() #delete the idlist
+        check_lamp_cam(curr_scene)
         return{'FINISHED'}
 
 #DEPRECATED
-class delete_active_lamp(bpy.types.Operator):
-    """Delete selected lamp"""
-    bl_idname = "srti.delete_active_lamp"
-    bl_label = "Delete Active Lamp"
-    bl_options = {'REGISTER', 'UNDO'}
+#class delete_active_lamp(bpy.types.Operator):
+#    """Delete selected lamp"""
+#    bl_idname = "srti.delete_active_lamp"
+#    bl_label = "Delete Active Lamp"
+#    bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
-        lamp_list = context.scene.srti_props.list_lights
-        active_lamp = context.active_object 
+#    def execute(self, context):
+#        curr_scene = context.scene
+#        props = curr_scene.srti_props
+#        lamp_list = props.C_L_list_lights
+#        active_lamp = context.active_object 
 
-        bpy.ops.object.select_all(action='DESELECT')
+#        bpy.ops.object.select_all(action='DESELECT')
 
-        if lamp_list:
-            for index, obj in enumerate(lamp_list):
-                if obj.light == active_lamp: 
-                    print (obj)
-                    lamp_list.remove(index)
-                    active_lamp.select = True
-                    bpy.ops.object.delete()
-                    break
-        check_lamp_cam(context.scene)
-        return{'FINISHED'}
+#        if lamp_list:
+#            for index, obj in enumerate(lamp_list):
+#                if obj.light == active_lamp: 
+#                    print (obj)
+#                    lamp_list.remove(index)
+#                    active_lamp.select = True
+#                    bpy.ops.object.delete()
+#                    break
+#        check_lamp_cam(curr_scene)
+#        return{'FINISHED'}
 
 ########CAMERA########
 class create_cameras(bpy.types.Operator):
@@ -118,10 +123,11 @@ class create_cameras(bpy.types.Operator):
 
     def execute(self, context):
         curr_scene = context.scene
+        props = curr_scene.srti_props
         print("- Creating new camera ---")
         #create the main parent
         create_main(curr_scene)
-        main_parent = curr_scene.srti_props.main_parent
+        main_parent = props.C_C_main_parent
 
         camera_data = bpy.data.cameras.new("Camera")
         camera_object = bpy.data.objects.new("Camera", camera_data)
@@ -130,7 +136,7 @@ class create_cameras(bpy.types.Operator):
         camera_object.parent = main_parent
         camera_object.location = (0, 0, 2)
 
-        camera = curr_scene.srti_props.list_cameras.add()
+        camera = props.C_C_list_cameras.add()
         camera.camera = camera_object
 
         self.report({'INFO'},"Created camera: %s."%camera.camera.name)
@@ -144,7 +150,8 @@ class delete_cameras(bpy.types.Operator):
     
     def execute(self, context):
         curr_scene = context.scene
-        camera_list = curr_scene.srti_props.list_cameras
+        props = curr_scene.srti_props
+        camera_list = props.C_C_list_cameras
         print("- Deleting all cameras ---")
         bpy.ops.object.select_all(action='DESELECT')
 
@@ -154,37 +161,37 @@ class delete_cameras(bpy.types.Operator):
 
         bpy.ops.object.delete()
 
-        context.scene.srti_props.list_cameras.clear() #delete the idlist
-        check_lamp_cam(context.scene)
+        props.C_C_list_cameras.clear() #delete the idlist
+        check_lamp_cam(curr_scene)
         self.report({'INFO'},"Deleted all cameras")
         return{'FINISHED'}
 
 
 #DEPRECATED
-class delete_active_camera(bpy.types.Operator):
-    """Delete selected camera"""
-    bl_idname = "srti.delete_active_camera"
-    bl_label = "Delete Active Camera"
-    bl_options = {'REGISTER', 'UNDO'}
+#class delete_active_camera(bpy.types.Operator):
+#    """Delete selected camera"""
+#    bl_idname = "srti.delete_active_camera"
+#    bl_label = "Delete Active Camera"
+#    bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
-        camera_list = context.scene.srti_props.list_cameras
-        active_cam = context.active_object
+#    def execute(self, context):
+#        camera_list = context.scene.srti_props.C_C_list_cameras
+#        active_cam = context.active_object
 
-        bpy.ops.object.select_all(action='DESELECT')
+#        bpy.ops.object.select_all(action='DESELECT')
 
-        if camera_list:
-            for index, obj in enumerate(camera_list):
-                if obj.camera == active_cam: 
-                    print (obj)
-                    camera_list.remove(index)
-                    active_cam.select = True
-                    bpy.ops.object.delete()
-                    break
+#        if camera_list:
+#            for index, obj in enumerate(camera_list):
+#                if obj.camera == active_cam: 
+#                    print (obj)
+#                    camera_list.remove(index)
+#                    active_cam.select = True
+#                    bpy.ops.object.delete()
+#                    break
 
-        check_lamp_cam(context.scene)
+#        check_lamp_cam(context.scene)
 
-        return{'FINISHED'}
+#        return{'FINISHED'}
 
 
 
@@ -204,40 +211,41 @@ class values_UIList(bpy.types.Operator):
 
     def invoke(self, context, event):
 
-        scn = context.scene
-        idx = scn.srti_props.selected_value_index
+        curr_scene = context.scene
+        props = curr_scene.srti_props
+        idx = props.C_V_selected_value_index
 
         try:
-            item = scn.srti_props.list_values[idx]
+            item = props.C_V_list_values[idx]
         except IndexError:
             pass
 
         else:
-            if self.action == 'DOWN' and idx < len(scn.srti_props.list_values) - 1:
-                item_next = scn.srti_props.list_values[idx+1].name
-                scn.srti_props.list_values.move(idx, idx + 1)
-                scn.srti_props.selected_value_index += 1
-                info = 'Item %d selected' % (scn.srti_props.selected_value_index + 1)
+            if self.action == 'DOWN' and idx < len(props.C_V_list_values) - 1:
+                item_next = props.C_V_list_values[idx+1].name
+                props.C_V_list_values.move(idx, idx + 1)
+                props.C_V_selected_value_index += 1
+                info = 'Item %d selected' % (props.C_V_selected_value_index + 1)
                 self.report({'INFO'}, info)
 
             elif self.action == 'UP' and idx >= 1:
-                item_prev = scn.srti_props.list_values[idx-1].name
-                scn.srti_props.list_values.move(idx, idx-1)
-                scn.srti_props.selected_value_index -= 1
-                info = 'Item %d selected' % (scn.srti_props.selected_value_index + 1)
+                item_prev = props.C_V_list_values[idx-1].name
+                props.C_V_list_values.move(idx, idx-1)
+                props.C_V_selected_value_index -= 1
+                info = 'Item %d selected' % (props.C_V_selected_value_index + 1)
                 self.report({'INFO'}, info)
 
             elif self.action == 'REMOVE':
-                info = 'Item %s removed from list' % (scn.srti_props.list_values[scn.srti_props.selected_value_index].name)
-                scn.srti_props.selected_value_index -= 1
+                info = 'Item %s removed from list' % (props.C_V_list_values[props.C_V_selected_value_index].name)
+                props.C_V_selected_value_index -= 1
                 self.report({'INFO'}, info)
-                scn.srti_props.list_values.remove(idx)
+                props.C_V_list_values.remove(idx)
 
         if self.action == 'ADD':
-            item = scn.srti_props.list_values.add()
-            #item.id = len(scn.srti_props.list_values)
-            item.name = "Value" # assign name of selected object scn.srti_props.list_values
-            scn.srti_props.selected_value_index = (len(scn.srti_props.list_values)-1)
+            item = props.C_V_list_values.add()
+            #item.id = len(props.C_V_list_values)
+            item.name = "Value" # assign name of selected object props.C_V_list_values
+            props.C_V_selected_value_index = (len(props.C_V_list_values)-1)
             info = '%s added to list' % (item.name)
             self.report({'INFO'}, info)
 

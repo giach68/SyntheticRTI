@@ -7,6 +7,7 @@ file_lines = []
 
  ######RNA PROPERTIES######
 
+ #
 class light(bpy.types.PropertyGroup):
     light = bpy.props.PointerProperty(name="Light object",
         type = bpy.types.Object,
@@ -24,49 +25,66 @@ class value(bpy.types.PropertyGroup):
     steps = bpy.props.IntProperty(default = 2, min = 2)
 
 class srti_props(bpy.types.PropertyGroup):
+    #---Create properties(C):
+        
+    #main parente empty pointer
+    C_C_main_parent = bpy.props.PointerProperty(name="Main Parent",
+        type=bpy.types.Object,
+        description = "Main parent of the group")
+    
+    #--Lamps(C_L)
     #path to the .lp file
-    light_file_path = bpy.props.StringProperty(name="Lights file Path",
+    C_L_light_file_path = bpy.props.StringProperty(name="Lights file Path",
         subtype='FILE_PATH',
         default="*.lp",
         description = 'Path to the lights file.')
         
-    #output folder path in use if overwrite_folder = true
-    output_folder = bpy.props.StringProperty(name="Save file directory",
-        subtype='DIR_PATH',
-        description = 'Path to the lights file.')
-      
-    #output name in use if overwrite_name = true
-    save_name = bpy.props.StringProperty(name="Save file name",
-        default = "Image",
-        description = "Export file name")
+    #list of lamps
+    C_L_list_lights = bpy.props.CollectionProperty(type = light)
     
-    #main parente empty pointer
-    main_parent = bpy.props.PointerProperty(name="Main Parent",
-        type=bpy.types.Object,
-        description = "Main parent of the group")
-
+    #--Cameras(C_C):
+    #list of cameras
+    C_C_list_cameras = bpy.props.CollectionProperty(type = camera)
+    
+    #--Values(C_V):
     #pointer to object affected by value changes
-    main_object = bpy.props.PointerProperty(name="Main object",
+    C_V_main_object = bpy.props.PointerProperty(name="Main object",
         type=bpy.types.Object,
         description = "Main object to apply material")
-     
+    
+    #list of values
+    C_V_list_values = bpy.props.CollectionProperty(type = value)
+    
+    #index of active value   
+    C_V_selected_value_index = bpy.props.IntProperty()
+
+    #---Render properties(R):
+    
+    #--output folder path(R_FP)
     #boolean to overwrite the output folder path   
-    overwrite_folder = bpy.props.BoolProperty(name = "Overwrite export folder",
+    R_FP_overwrite_folder = bpy.props.BoolProperty(name = "Overwrite export folder",
         default = False,
         description = "Overwrite export folder path")
 
+    #output folder path in use if overwrite_folder = true
+    R_FP_output_folder = bpy.props.StringProperty(name="Save file directory",
+        subtype='DIR_PATH',
+        description = 'Path to the lights file.')
+
+    #--output folder name(R_FN)
     #boolean to overwrite the output folder name
-    overwrite_name = bpy.props.BoolProperty(name = "Overwrite output name",
+    R_FN_overwrite_name = bpy.props.BoolProperty(name = "Overwrite output name",
         default = False,
         description = "Overwrite output name")
-    
+
+    #output name in use if overwrite_name = true
+    R_FN_save_name = bpy.props.StringProperty(name="Save file name",
+        default = "Image",
+        description = "Export file name")
+        
     #modified = bpy.props.BoolProperty(name = "Boolean if not animated", default = True)
 
-    selected_value_index = bpy.props.IntProperty()
 
-    list_lights = bpy.props.CollectionProperty(type = light)
-    list_cameras = bpy.props.CollectionProperty(type = camera)
-    list_values = bpy.props.CollectionProperty(type = value)
 
 def register():
     print("-"*40)
