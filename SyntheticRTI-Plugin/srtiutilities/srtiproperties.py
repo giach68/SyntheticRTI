@@ -59,6 +59,11 @@ class srti_props(bpy.types.PropertyGroup):
     overwrite_name = bpy.props.BoolProperty(name = "Overwrite output name",
         default = False,
         description = "Overwrite output name")
+        
+    #boolean to enable Tools: node export
+    enable_node_exp = bpy.props.BoolProperty(name = "Enable node export",
+        default = False,
+        description = "Enable node export")
     
     #modified = bpy.props.BoolProperty(name = "Boolean if not animated", default = True)
 
