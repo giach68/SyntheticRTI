@@ -65,6 +65,7 @@ class create_export_node(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         curr_scene = context.scene
+        props = curr_scene.srti_props
         file_path = self.filepath
         folder_path = os.path.split(file_path)[0]
         file_name = os.path.splitext(bpy.path.basename(file_path))[0]

@@ -5,6 +5,7 @@ import itertools
 import os
 from ..srtifunc import *
 from ..srtiproperties import file_lines as file_lines
+
 ####ANIMATION########
 class animate_all(bpy.types.Operator):
     """Animate all lights, cameras and parameter"""
@@ -22,11 +23,12 @@ class animate_all(bpy.types.Operator):
 
         #global var
         curr_scene = context.scene
-        lamp_list = curr_scene.srti_props.list_lights
-        camera_list = curr_scene.srti_props.list_cameras
-        value_list = curr_scene.srti_props.list_values
-        object = curr_scene.srti_props.main_object
-        file_name = curr_scene.srti_props.save_name
+        props = curr_scene.srti_props
+        lamp_list = props.C_L_list_lights
+        camera_list = props.C_C_list_cameras
+        value_list = props.C_V_list_values
+        object = props.C_V_main_object
+        file_name = props.R_FN_save_name
         global file_lines
 
         #generated lists
@@ -106,7 +108,7 @@ class animate_all(bpy.types.Operator):
                     material_list.append(node_list)
 
             #Creation of values array
-            values = curr_scene.srti_props.list_values
+            values = props.C_V_list_values
             #global all_values
             index_name = 0
             for val in values:
@@ -205,6 +207,7 @@ class render_images(bpy.types.Operator):
     
     def execute(self, context):
         curr_scene = context.scene
+        props = curr_scene.srti_props
         
         save_dir = get_export_folder_path(context)
         file_name = get_export_name(context)
@@ -240,6 +243,7 @@ class create_export_file(bpy.types.Operator):
     
     def execute(self, context):
         curr_scene = context.scene
+        props = curr_scene.srti_props
         
         save_dir = get_export_folder_path(context)
         file_name = get_export_name(context)
