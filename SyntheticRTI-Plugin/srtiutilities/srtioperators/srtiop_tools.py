@@ -381,3 +381,37 @@ class reset_nodes(bpy.types.Operator):
         curr_scene.render.resolution_percentage = 100
         return{'FINISHED'}
 
+class subdivide_files(bpy.types.Operator):
+    """Reset workspace deleting nodes"""
+    bl_idname = 'srti.subdivide_files'
+    bl_label = 'Subdivide Files'
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        curr_scene = context.scene
+        props = curr_scene.srti_props
+
+        csv = props.T_SF_input_file
+        origin_f = props.T_SF_origin_folder
+        output_f = props.T_SF_output_folder
+        mode = props.T_SF_mode
+        cr_files = props.T_SF_create_csv
+        recursive = props.T_SF_recursive
+
+        if csv == '*.csv' or origin_f == '' or output_f == '':
+            self.report({'ERROR'}, 'Missing inputs!')
+            return {'CANCELLED'}
+        else:
+            print(csv)
+            print(origin_f)
+            print(output_f)
+            print(mode)
+            print(cr_files)
+            csvfile = open('csv', newline='')
+            reader = csv.reader(csvfile, delimiter=',')
+            for row in spamreader:
+                print(row)
+
+            return {'FINISHED'}
+
+

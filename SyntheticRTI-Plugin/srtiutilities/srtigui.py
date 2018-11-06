@@ -141,6 +141,22 @@ class SyntheticRTIPanelTools(bpy.types.Panel):
             row.operator("srti.render_composite", icon = 'GROUP_VCOL')
             col.operator("srti.reset_nodes", icon = "X")
 
+        #subdivide files
+        box_sub_file = layout.box()
+        box_sub_file.prop(props, 'T_SF_enable_sub_file', text='Subdivide files', icon='TRIA_DOWN' if props.T_SF_enable_sub_file else 'TRIA_RIGHT', emboss=False)
+        if props.T_SF_enable_sub_file:
+            col = box_sub_file.column()
+            col.prop(props, 'T_SF_input_file', text='CSV File', icon='FILE_TEXT')
+            col.prop(props, 'T_SF_origin_folder', text='Origin folder', icon='COPYDOWN')
+            col.prop(props, 'T_SF_output_folder', text='Output folder', icon='PASTEDOWN')
+            col.prop(props, 'T_SF_recursive')
+            col.prop(props, 'T_SF_create_csv')
+            row = col.row()
+            row.label('Mode:')
+            row.prop(props, 'T_SF_mode', text='Mode:', expand=True)
+
+            box_sub_file.operator('srti.subdivide_files', icon='IMGDISPLAY')
+
 
 ###Debug
 class SyntheticRTIPanelDebug(bpy.types.Panel):

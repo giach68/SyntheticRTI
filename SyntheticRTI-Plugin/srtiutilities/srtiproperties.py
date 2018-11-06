@@ -90,6 +90,45 @@ class srti_props(bpy.types.PropertyGroup):
         default = False,
         description = "Enable node export")
 
+    #--Subdivide Files
+    #boolean to enable Tools: Subdivide files
+    T_SF_enable_sub_file = bpy.props.BoolProperty(name='Enable subdivide file',
+        default=False,
+        description='Subdivide files from an origin folder to an output folder by materials taken from a .CSV file generated from the plugin')
+
+    #Input CSV file
+    T_SF_input_file = bpy.props.StringProperty(name='CSV input file',
+        subtype='FILE_PATH',
+        default='*.csv',
+        description='Path to the CSV input file.')
+
+    #origin folder
+    T_SF_origin_folder = bpy.props.StringProperty(name='Origin folder',
+        subtype='DIR_PATH',
+        description='Path to the origin folder')
+
+    #output folder
+    T_SF_output_folder = bpy.props.StringProperty(name='output folder',
+        subtype='DIR_PATH',
+        description='Path to the output folder')
+
+    #boolean to subdivide files recursevlyin folders
+    T_SF_recursive = bpy.props.BoolProperty(name='Subdivide recursevly',
+        default=False,
+        description='Subdivide files in subdirectories of the origin path')
+
+    #Mode to use to copy or move files
+    T_SF_mode = bpy.props.EnumProperty(items=[
+        ('copy', 'Copy', 'Copy', '', 0),
+        ('move', 'Move', 'Move', '', 1)],
+        default='copy',
+        name='Subdivide method')
+
+    #Boolean to create additional csv file for folder
+    T_SF_create_csv = bpy.props.BoolProperty(name='Create additional files',
+        default=False,
+        description='Create additional .CSV file in folder with light directions')
+
     #modified = bpy.props.BoolProperty(name = "Boolean if not animated", default = True)
 
 
