@@ -2,6 +2,8 @@
 import bpy
 import os
 import re
+import csv
+import shutil
 from ..srtifunc import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 #####TOOLS#####
@@ -391,27 +393,156 @@ class subdivide_files(bpy.types.Operator):
         curr_scene = context.scene
         props = curr_scene.srti_props
 
-        csv = props.T_SF_input_file
-        origin_f = props.T_SF_origin_folder
-        output_f = props.T_SF_output_folder
+        csvpath = bpy.path.abspath(props.T_SF_input_file)
+        origin_f = bpy.path.abspath(props.T_SF_origin_folder)
+        output_f = bpy.path.abspath(props.T_SF_output_folder)
         mode = props.T_SF_mode
         cr_files = props.T_SF_create_csv
         recursive = props.T_SF_recursive
+        addfilename = props.T_SF_additional_filename
 
-        if csv == '*.csv' or origin_f == '' or output_f == '':
+        if csvpath == '*.csv' or origin_f == '' or output_f == '':
             self.report({'ERROR'}, 'Missing inputs!')
             return {'CANCELLED'}
         else:
-            print(csv)
-            print(origin_f)
-            print(output_f)
-            print(mode)
-            print(cr_files)
-            csvfile = open('csv', newline='')
-            reader = csv.reader(csvfile, delimiter=',')
-            for row in spamreader:
-                print(row)
+            print('='*40)
+            print("||\n|| -- Begin subdivide file --")
+            print("|| CSV file: %s"%csvpath)
+            print("|| Origin folder: %s"%origin_f)
+            print("|| Output Folder: %s"%output_f)
+            print("|| Mode: %s"%mode)
+            print("|| Recursive folders: %s"%recursive)
+            print("|| Create files: %s"%cr_files)
+            print("|| Additional file name: %s\n||"%addfilename)
 
+            #open csv file
+            csvfile = open(csvpath, newline='')
+            reader = csv.reader(csvfile, delimiter=',')
+                  
+            #prepare list of keys of values
+            params = next(reader)[4:]
+            params_num = len(params)
+            print("|| Found %i parameters:"%params_num)
+            print(params)
+            
+            #load all rows to enable multiple reads
+            csvrows = []
+            for row in reader:
+                csvrows.append(row)
+                
+            csvfile.close()
+            
+            #load all folders
+            folders = []
+ 
+            if recursive:
+                folderlist = os.listdir(origin_f)
+                for folder in folderlist:
+                    fold = os.path.normpath(origin_f+"/"+folder)
+                    if os.path.isdir(fold):
+                        folders.append(folder)
+            else:
+                folders.append("/.")
+            
+            #store errors number
+            err_num = 0
+            
+            #Loop for all folders
+            for fold in folders:  
+                sub_origin_f = os.path.normpath(origin_f+fold)
+                sub_output_f = os.path.normpath(output_f+fold)
+                
+                print("||")
+                print('='*40)
+                print("|  | Origin: %s"%sub_origin_f)
+                print("|  | Output: %s"%sub_output_f)
+                print("|  |"+'-'*40)
+                #get files list
+                filelist = os.listdir(sub_origin_f)
+                if filelist:
+                
+                    #obtaing file structure number and extension from first file aviable
+                    firstfileelements = filelist[0].split('-')
+                    numandext = firstfileelements[-1].split('.')
+                    
+                    #calculate number length
+                    numlength = len(numandext[0])
+                    print("|  | File number length: %i"%numlength)
+                    
+                    #get file extension
+                    filext = numandext[1]
+                    print("|  | File ext: %s"%filext)
+                    
+                    #recreate file name
+                    filename = "-".join(filelist[0].split('-')[:-1])
+                    print("|  | File name: %s"%filename)
+                    
+                    #check if parameters combination's folder already exist
+                    parameter_old = ""
+                    
+                    #additional file
+                    addfile = False
+                    
+                    #files copy/move loop
+                    for row in csvrows:
+                        parameter = filename
+                        for index in range(0,params_num):
+                            parameter += "-"+params[index] +"_"+ row[index+4]
+
+                        if(parameter != parameter_old):  
+                            new_dir = os.path.normpath(sub_output_f+"/"+parameter) 
+                            print("|  | Parameter: %s"%parameter[len(filename)+1:])
+                            
+                            #need tocheck if already exist
+                            try:
+                                os.makedirs(new_dir)
+                            except FileExistsError as why:
+                                print('>>>> Folder already exist! Error: %s'%why)
+                                err_num += 1
+                                
+                            #close old file if open
+                            if addfile:
+                                addfile.close()
+                            
+                            #create additional file if create additional files is selected
+                            if cr_files:
+                                addfile = open(os.path.normpath(sub_output_f+"/"+parameter+"/"+addfilename), "w")
+                                       
+                            parameter_old = parameter
+                            
+                        
+                            
+                        index = row[0].split('-')[-1]
+                        file = filename+"-"+num_to_fixed_len_str(int(index),numlength)+"."+filext
+                        
+                        #create file path
+                        file_origin = os.path.normpath(sub_origin_f+"/"+file)
+                        file_output = os.path.normpath(sub_output_f+"/"+parameter+"/"+file)
+                        #print(file_origin)
+                        #print(file_output)
+                        
+                        #copy or move the files with error handlings
+                        try:
+                            if mode == "copy":
+                                shutil.copyfile(file_origin,file_output)
+                            else:
+                                shutil.move(file_origin,file_output)
+                            
+                            #Add image to the file
+                            if addfile:
+                                addfile.write("%s,%s,%s,%s\n"%(row[1],row[2],row[3],file))
+                                
+                        except FileNotFoundError as why:
+                            print('>>>> File not found! Error: %s'%why)
+                            err_num += 1
+                else:
+                    print('>>>> No files found on %s!'%sub_origin_f)
+                    err_num += 1
+                print('='*40)
+                
+            if err_num:
+                self.report({'WARNING'}, '%i warnings found! Look in console for details.'%err_num)
+                      
             return {'FINISHED'}
 
 

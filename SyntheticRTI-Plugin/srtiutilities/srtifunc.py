@@ -34,7 +34,10 @@ def check_lamp_cam(scene):
 
 def format_index(num, tot):
     tot_dig = len(str(tot))
-    return "{0:0{dig}d}".format(num, dig = tot_dig)
+    return num_to_fixed_len_str(num, tot_dig)
+
+def num_to_fixed_len_str(num, len):
+    return "{0:0{dig}d}".format(num, dig = len)
 
 def calculate_tot_frame(context):
     """Return the numbers of total frames"""

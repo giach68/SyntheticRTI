@@ -128,6 +128,11 @@ class srti_props(bpy.types.PropertyGroup):
     T_SF_create_csv = bpy.props.BoolProperty(name='Create additional files',
         default=False,
         description='Create additional .CSV file in folder with light directions')
+    
+    #additional file name 
+    T_SF_additional_filename = bpy.props.StringProperty(name='Output file name.',
+        default='light-directions.csv',
+        description='Output file name.')
 
     #modified = bpy.props.BoolProperty(name = "Boolean if not animated", default = True)
 

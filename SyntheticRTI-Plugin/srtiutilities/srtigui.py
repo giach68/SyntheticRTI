@@ -149,8 +149,11 @@ class SyntheticRTIPanelTools(bpy.types.Panel):
             col.prop(props, 'T_SF_input_file', text='CSV File', icon='FILE_TEXT')
             col.prop(props, 'T_SF_origin_folder', text='Origin folder', icon='COPYDOWN')
             col.prop(props, 'T_SF_output_folder', text='Output folder', icon='PASTEDOWN')
-            col.prop(props, 'T_SF_recursive')
-            col.prop(props, 'T_SF_create_csv')
+            col2 = col.column()
+            col2.prop(props, 'T_SF_recursive')
+            col2.prop(props, 'T_SF_create_csv')
+            if props.T_SF_create_csv: 
+                col2.prop(props, 'T_SF_additional_filename')
             row = col.row()
             row.label('Mode:')
             row.prop(props, 'T_SF_mode', text='Mode:', expand=True)
