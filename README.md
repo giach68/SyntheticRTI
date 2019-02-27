@@ -1,5 +1,5 @@
-![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.4-yellow.svg)
-# SyntheticRTI
+﻿![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.4-yellow.svg)  ![Blender Version](https://img.shields.io/badge/Blender_Version-2.79-blue.svg)
+# SyntheticRTI (2.79)
 Creation of synthetic datasets for RTI and Photometric Stereo applications
 - [Introduction](https://github.com/giach68/SyntheticRTI/tree/Develop#introduction)
 - [Download](https://github.com/giach68/SyntheticRTI/tree/Develop#download)
@@ -8,6 +8,8 @@ Creation of synthetic datasets for RTI and Photometric Stereo applications
   - [Create](https://github.com/giach68/SyntheticRTI/tree/Develop#create)
   - [Render](https://github.com/giach68/SyntheticRTI/tree/Develop#render)
   - [Tools](https://github.com/giach68/SyntheticRTI/tree/Develop#tools)
+    - [Export Nodes](https://github.com/giach68/SyntheticRTI/tree/Develop#export_nodes)
+    - [Subdide files](https://github.com/giach68/SyntheticRTI/tree/Develop#subdivide_files)
 - [Various](https://github.com/giach68/SyntheticRTI/tree/Develop#various)
 ## Introduction
 SyntheticRTI is a Blender plugin built to help create a synthetic database of 3d scanned images to train and test algorithms on.
@@ -15,14 +17,13 @@ SyntheticRTI is a Blender plugin built to help create a synthetic database of 3d
 Currently the plugin is developed for Blender version 2.79 and uses only the cycles renderer.
 
 ## Download
-You can clone the whole project or download just the zipped plugin from here: [Download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/giach68/SyntheticRTI/tree/Develop/SyntheticRTI-Plugin)
+You can clone the whole project or download just the zipped plugin from here: [Download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/giach68/SyntheticRTI/tree/Develop)
 
 ## Installation
-If you cloned the project you have to first zip the `SyntheticRTI-Plugin` folder.
-To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the file `SyntheticRTI-Plugin.zip` and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
+To install the plugin go to `file -> User Preferences… -> Add-ons -> install Add-on from File…` choose the downloaded .zip file and press on `Install Add-on from File…` . Once installed it need to be activated. In the same settings page, write SyntheticRTI in the searchbox and check the tick on the add-on. The plugin will be available on the 3DView on the Tool tab.
 
 ## Usage
-![plugin](https://github.com/giach68/SyntheticRTI/blob/Develop/Documentation/plugin_full.png)
+![plugin](https://github.com/giach68/SyntheticRTI/blob/Develop/other/-/plugin_full.png)
 
 The plugin is divided in 4 panels:
 - **Create**: its mainly purpose is to create lamps, cameras and to manage the material parameters we want to iterate over the combinations;
@@ -91,7 +92,7 @@ For a total of 10 frames.
 
 To apply the parameters to the material the object must have at least one material. The plugin enables the nodes for each materials and creates an animated value node for each parameter. Then you simply connect the value nodes to whichever node is needed to change over the animation.
 
-![material node](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/node_example.png)
+![material node](https://github.com/giach68/SyntheticRTI/blob/master/other/Documentation/node_example.png)
 
 ## Render
 **Output folder**: the path where to save the output files. It use the current blend file path if saved. It's possible to overwrite it.
@@ -100,7 +101,7 @@ To apply the parameters to the material the object must have at least one materi
 
 > Overwrite example:
 
-![overwrite example](https://github.com/giach68/SyntheticRTI/blob/Develop/Documentation/export_overwrite.png)
+![overwrite example](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/export_overwrite.png)
 
 **Animate all**: it creates the animation which iterates over all parameters, all cameras and all lights in this specific order. It needs at least one Camera to work.  
 
@@ -125,7 +126,7 @@ To apply the parameters to the material the object must have at least one materi
 
 **Set Render**: set the render output path: `output_folder/EXR/name-frame_number`, the format to be .exr 32bit.
 
-![output](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/output.png)
+![output](https://github.com/giach68/SyntheticRTI/blob/master/other/Documentation/output.png)
 
 It also set the following render passes on:  
 - Normal;  
@@ -137,15 +138,17 @@ It also set the following render passes on:
 - Glossy Indirect;  
 - Glossy Color.
 
-![steps](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/passes.png)
+![steps](https://github.com/giach68/SyntheticRTI/blob/master/other/Documentation/passes.png)
 
 **Create file**: saves the output .csv file in the output folder with the given name. It contains all the coordinates of lamps and parameters value (camera positions and parameters still need implementation).  
 
 ## Tools
 
-![tools](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/tools.png)
+![tools](https://github.com/giach68/SyntheticRTI/blob/master/other/Documentation/tools.png)
 
 **Export Lamp**: When a mesh is selected is possible to export its vertices in a .lp file to use them as lamps.
+
+### Export Nodes
 
 **Create nodes**: it’s used to convert .exr files in .png. Selecting a single file in the folder searches for the first and last frame of the animation. If there is a number in front (like 005-cube) it adds the number prefix to all the output folders. The output folders will be in a PNG folder at the upper level of the .exr file. The operator creates a compositing node tree and enables the following operations:
 
@@ -193,7 +196,29 @@ The final folder will look like this:
 
 **Delete Nodes**: it deletes the nodes tree and restores the output to .exr
 
-![Node setup](https://github.com/giach68/SyntheticRTI/blob/master/Documentation/node_export.png)
+![Node setup](https://github.com/giach68/SyntheticRTI/blob/master/other/Documentation/node_export.png)
+
+### Subdivide files
+
+![subdivide files](https://github.com/giach68/SyntheticRTI/blob/master/other/Documentation/subdivide.png)
+
+This tool helps to divide rendered files (both .exr and .png) in subfolders, divided by combinations of parameters.
+
+**CSV File**: .csv file generated from the plugin for the project we want to subdivide rendered files.
+
+**Origin folder**: folder with the origin files. Could be single folder or a parent folder of multiple folders (EXR folder or PNG folder).
+
+**Output folder**: destination folder.
+
+**Subdivide recursevly**: check if Origin folder has subfolders.
+
+**Create additional files**: it create a .csv file for each folder with only lights directions and file's names.
+
+**Output file name**: name of the .cvs file.
+
+**Mode**: you can either copy or move the files.
+
+**Subdivide Files**: it start the subdivide process.
 
 ## Various
 To view the console in Micorsoft Windows and have output information: `Window -> Toggle System Console`
