@@ -1,4 +1,4 @@
-![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.4-yellow.svg)  ![Blender Version](https://img.shields.io/badge/Blender_Version-2.79-blue.svg)
+![Branchlabel](https://img.shields.io/badge/Branch-Develop-green.svg)  ![Versionlabel](https://img.shields.io/badge/Version-0.4.5-yellow.svg)  ![Blender Version](https://img.shields.io/badge/Blender_Version-2.79-blue.svg)
 # SyntheticRTI (2.79)
 Creation of synthetic datasets for RTI and Photometric Stereo applications
 - [Introduction](https://github.com/giach68/SyntheticRTI/tree/Develop#introduction)
@@ -8,8 +8,8 @@ Creation of synthetic datasets for RTI and Photometric Stereo applications
   - [Create](https://github.com/giach68/SyntheticRTI/tree/Develop#create)
   - [Render](https://github.com/giach68/SyntheticRTI/tree/Develop#render)
   - [Tools](https://github.com/giach68/SyntheticRTI/tree/Develop#tools)
-    - [Export Nodes](https://github.com/giach68/SyntheticRTI/tree/Develop#export-nodes-from-.exr)
-    - [Subdide files](https://github.com/giach68/SyntheticRTI/tree/Develop#subdivide-rendered-files)
+    - [Export Nodes from .exr](https://github.com/giach68/SyntheticRTI/tree/Develop#export-nodes-from-exr)
+    - [Subdivide rendered files](https://github.com/giach68/SyntheticRTI/tree/Develop#subdivide-rendered-files)
 - [Various](https://github.com/giach68/SyntheticRTI/tree/Develop#various)
 ## Introduction
 SyntheticRTI is a Blender plugin built to help create a synthetic database of 3d scanned images to train and test algorithms on.
