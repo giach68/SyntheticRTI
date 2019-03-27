@@ -9,9 +9,9 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 #####TOOLS#####
 #export lamps
 class export_as_lamp(bpy.types.Operator, ExportHelper):
-    """Create a file for lamp from active object vertices (Must be a MESH!)"""
+    """Create a .lp file for lamp from active object vertices (Must be a MESH!)"""
     bl_idname = "srti.export_lamp"
-    bl_label = "Export Lamp"
+    bl_label = "Export Mesh as Lamp file (.lp)"
     bl_options = {'REGISTER', 'UNDO'}
     # ExportHelper mixin class uses this
     filename_ext = ".lp"
@@ -55,7 +55,7 @@ class export_as_lamp(bpy.types.Operator, ExportHelper):
 class create_export_node(bpy.types.Operator, ImportHelper):
     """Prepares the file to output png passes"""
     bl_idname = "srti.create_export_node"
-    bl_label = "Create Nodes"
+    bl_label = "Create Nodes from .exr"
     bl_options = {'REGISTER', 'UNDO'}
 
     filename_ext = ".exr"
@@ -310,17 +310,17 @@ class render_normals(bpy.types.Operator):
         curr_scene.frame_current = 1
 
         #set output format
-        curr_scene.render.image_settings.file_format = 'PNG'
-        curr_scene.render.image_settings.color_mode = 'RGB'
-        curr_scene.render.image_settings.color_depth = '16'
-        curr_scene.render.image_settings.compression = 0
+#        curr_scene.render.image_settings.file_format = 'PNG'
+#        curr_scene.render.image_settings.color_mode = 'RGB'
+#        curr_scene.render.image_settings.color_depth = '16'
+#        curr_scene.render.image_settings.compression = 0
 
         #enable compositor
         curr_scene.render.use_compositing = True
         curr_scene.use_nodes = True
 
         #set color management to linear
-        curr_scene.display_settings.display_device = 'None'
+        #curr_scene.display_settings.display_device = 'None'
         
         #set rendering to overwrrite
         curr_scene.render.use_overwrite = True

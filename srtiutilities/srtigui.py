@@ -41,7 +41,7 @@ class SyntheticRTIPanelCreate(bpy.types.Panel):
         layout = self.layout
         
         #light
-        layout.prop(props, "C_L_light_file_path", text = 'Light file', icon = "LAMP_SPOT")
+        layout.prop(props, "C_L_light_file_path", text = 'Light file (.lp)', icon = "LAMP_SPOT")
         row = layout.row(align = True)
         row.operator("srti.create_lamps", icon ="OUTLINER_DATA_LAMP")
         row.operator("srti.delete_lamps", icon = "X")
@@ -110,8 +110,9 @@ class SyntheticRTIPanelRender(bpy.types.Panel):
         
         col = layout.column(align = True)
         col.operator("srti.animate_all", icon ="KEYINGSET")
-        col.operator("srti.render_images", icon = "RENDER_ANIMATION")
         col.operator("srti.create_file", icon = "FILE_TEXT")
+        col.operator("srti.render_images", icon = "PREFERENCES")
+        col.operator("render.render", text="Render Images", icon='RENDER_ANIMATION').animation = True
 
 ###Tools
 class SyntheticRTIPanelTools(bpy.types.Panel):
@@ -132,7 +133,7 @@ class SyntheticRTIPanelTools(bpy.types.Panel):
         
         #Export nodes
         box_node_exp = layout.box()
-        box_node_exp.prop(props, "T_NE_enable_node_exp", text = "Export Nodes", icon = "TRIA_DOWN" if props.T_NE_enable_node_exp else "TRIA_RIGHT", emboss = False)
+        box_node_exp.prop(props, "T_NE_enable_node_exp", text = "Export Nodes from .exr", icon = "TRIA_DOWN" if props.T_NE_enable_node_exp else "TRIA_RIGHT", emboss = False)
         if props.T_NE_enable_node_exp:
             col = box_node_exp.column(align = True)
             col.operator("srti.create_export_node", icon = "NODETREE")
@@ -143,7 +144,7 @@ class SyntheticRTIPanelTools(bpy.types.Panel):
 
         #subdivide files
         box_sub_file = layout.box()
-        box_sub_file.prop(props, 'T_SF_enable_sub_file', text='Subdivide files', icon='TRIA_DOWN' if props.T_SF_enable_sub_file else 'TRIA_RIGHT', emboss=False)
+        box_sub_file.prop(props, 'T_SF_enable_sub_file', text='Subdivide rendered files', icon='TRIA_DOWN' if props.T_SF_enable_sub_file else 'TRIA_RIGHT', emboss=False)
         if props.T_SF_enable_sub_file:
             col = box_sub_file.column()
             col.prop(props, 'T_SF_input_file', text='CSV File', icon='FILE_TEXT')

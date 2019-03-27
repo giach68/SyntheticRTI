@@ -8,8 +8,8 @@ Creation of synthetic datasets for RTI and Photometric Stereo applications
   - [Create](https://github.com/giach68/SyntheticRTI/tree/Develop#create)
   - [Render](https://github.com/giach68/SyntheticRTI/tree/Develop#render)
   - [Tools](https://github.com/giach68/SyntheticRTI/tree/Develop#tools)
-    - [Export Nodes](https://github.com/giach68/SyntheticRTI/tree/Develop#export-nodes)
-    - [Subdide files](https://github.com/giach68/SyntheticRTI/tree/Develop#subdivide-files)
+    - [Export Nodes](https://github.com/giach68/SyntheticRTI/tree/Develop#export-nodes-from-.exr)
+    - [Subdide files](https://github.com/giach68/SyntheticRTI/tree/Develop#subdivide-rendered-files)
 - [Various](https://github.com/giach68/SyntheticRTI/tree/Develop#various)
 ## Introduction
 SyntheticRTI is a Blender plugin built to help create a synthetic database of 3d scanned images to train and test algorithms on.
@@ -33,10 +33,10 @@ The plugin is divided in 4 panels:
 
 ## Create
 **Light file**: here you can insert the filepath of the .lp file with the position of lamps. Using the folder button it is possible to use the file select mode.  
-The .lp files are structured this way:  
+The .lp files are structured this way, delimited by spaces:  
 
-    #lights
-    #index x y z
+    total_number_of_lights
+    index_number x_coordinate y_coordinate z_coordinate
 
 > for example:
 
@@ -103,7 +103,7 @@ To apply the parameters to the material the object must have at least one materi
 
 ![overwrite example](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/export_overwrite.png)
 
-**Animate all**: it creates the animation which iterates over all parameters, all cameras and all lights in this specific order. It needs at least one Camera to work.  
+**Animate Features**: it creates the animation which iterates over all parameters, all cameras and all lights in this specific order. It needs at least one Camera to work.  
 
 > In example:
 
@@ -124,7 +124,9 @@ To apply the parameters to the material the object must have at least one materi
       - Par 2 = 1
         - ...
 
-**Set Render**: set the render output path: `output_folder/EXR/name-frame_number`, the format to be .exr 32bit.
+**Create .csv File**: saves the output .csv file in the output folder with the given name. It contains all the coordinates of lamps and parameters value (camera positions and parameters still need implementation). 
+
+**Set Render Settings**: set the render output path: `output_folder/EXR/name-frame_number`, the format to be .exr 32bit.
 
 ![output](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/output.png)
 
@@ -138,26 +140,26 @@ It also set the following render passes on:
 - Glossy Indirect;  
 - Glossy Color.
 
-![steps](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/passes.png)
-
-**Create file**: saves the output .csv file in the output folder with the given name. It contains all the coordinates of lamps and parameters value (camera positions and parameters still need implementation).  
+![steps](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/passes.png) 
 
 ## Tools
 
 ![tools](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/tools.png)
 
-**Export Lamp**: When a mesh is selected is possible to export its vertices in a .lp file to use them as lamps.
+**Export Mesh as Lamp file (.lp)**: When a mesh is selected is possible to export its vertices in a .lp file to use them as lamps.
 
-### Export Nodes
+### Export Nodes from .exr
 
-**Create nodes**: it’s used to convert .exr files in .png. Selecting a single file in the folder searches for the first and last frame of the animation. If there is a number in front (like 005-cube) it adds the number prefix to all the output folders. The output folders will be in a PNG folder at the upper level of the .exr file. The operator creates a compositing node tree and enables the following operations:
+**Create nodes from .exr**: it’s used to convert .exr files in .png. Selecting a single file in the folder searches for the first and last frame of the animation. If there is a number in front (like 005-cube) it adds the number prefix to all the output folders. The output folders will be in a PNG folder at the upper level of the .exr file. The operator creates a compositing node tree and enables the following operations:
 
 **Render Normals**: exports a single image of the normal in frame 1. It normalizes for a 0-1 range, multiplying by 0.5 and adding 0.5 to the .exr format.
 
 > The output file will have a suffix number that has to be deleted
 > manually.
 
-**Render Composite**: exports the entire animation for all the following combinations in the PNG folder, each in its own subfolder:
+**Render Composite**: exports the entire animation for all the following combinations in the PNG folder, each in its own subfolder: 
+> PNG output settings must be set manually
+
 - *DIFF*: only diffuse direct light `(Diffuse Direct * Diffuse Color)`;
 - *DIFF-INDIFF*: diffuse direct and indirect light `((Diffuse Direct + Diffuse Indirect) * Diffuse Color)`;
 - *DIFF-SPEC*: diffuse direct and specular direct light `((Diffuse Direct * Diffuse Color) + (Glossy Direct * Glossy Color))`;
@@ -198,7 +200,7 @@ The final folder will look like this:
 
 ![Node setup](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/node_export.png)
 
-### Subdivide files
+### Subdivide rendered files
 
 ![subdivide files](https://github.com/giach68/SyntheticRTI/blob/Develop/other/Documentation/subdivide.png)
 

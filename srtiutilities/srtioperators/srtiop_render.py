@@ -8,9 +8,9 @@ from ..srtiproperties import file_lines as file_lines
 
 ####ANIMATION########
 class animate_all(bpy.types.Operator):
-    """Animate all lights, cameras and parameter"""
+    """Animate all lights, cameras and parameters."""
     bl_idname = "srti.animate_all"
-    bl_label = "Animate all"
+    bl_label = "Animate Features"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -194,15 +194,15 @@ class animate_all(bpy.types.Operator):
             index_cam = 0
             index_prop += 1
 
-        #self.report({'INFO'}, "Animation complete, total frames = %i" % tot_frames)
+        self.report({'INFO'}, "Animation complete, total frames = %i. If there are Values check materials node, you may need to connect the value nodes." % tot_frames)
             
         return{'FINISHED'}
 
 #####RENDERING######
 class render_images(bpy.types.Operator):
-    """Render all images"""
+    """Set render path, set .exr MultyLayer output, activate rendering passes, set colorspace to linear (Display device to None)"""
     bl_idname = "srti.render_images"
-    bl_label = "Set Render"
+    bl_label = "Set Render Settings"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
@@ -233,7 +233,7 @@ class render_images(bpy.types.Operator):
 class create_export_file(bpy.types.Operator):
     """Create a .csv file with all the images name and parameters"""
     bl_idname = "srti.create_file"
-    bl_label = "Create file"
+    bl_label = "Create .csv File"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
