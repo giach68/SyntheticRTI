@@ -8,14 +8,14 @@ from ..srtifunc import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 #####TOOLS#####
 #export lamps
-class export_as_lamp(bpy.types.Operator, ExportHelper):
-    """Create a file for lamp from active object vertices (Must be a MESH!)"""
-    bl_idname = "srti.export_lamp"
-    bl_label = "Export Lamp"
+class SRTI_OT_export_as_lamp(bpy.types.Operator, ExportHelper):
+    """Create a .lp file for lamp from active object vertices. (Must be a MESH!)"""
+    bl_idname = "srti.export_as_lamp"
+    bl_label = "Export Mesh as Lamp file (.lp)"
     bl_options = {'REGISTER', 'UNDO'}
     # ExportHelper mixin class uses this
     filename_ext = ".lp"
-    filter_glob = bpy.props.StringProperty(
+    filter_glob : bpy.props.StringProperty(
             default="*.lp",
             options={'HIDDEN'},
             maxlen=255,  # Max internal buffer length, longer would be clamped.
@@ -52,14 +52,14 @@ class export_as_lamp(bpy.types.Operator, ExportHelper):
         file.close()
         return{'FINISHED'}
 
-class create_export_node(bpy.types.Operator, ImportHelper):
-    """Prepares the file to output png passes"""
+class SRTI_OT_create_export_node(bpy.types.Operator, ImportHelper):
+    """Prepares the file to output png passes."""
     bl_idname = "srti.create_export_node"
-    bl_label = "Create Nodes"
+    bl_label = "Create Nodes from .exr"
     bl_options = {'REGISTER', 'UNDO'}
 
     filename_ext = ".exr"
-    filter_glob = bpy.props.StringProperty(
+    filter_glob : bpy.props.StringProperty(
         default="*.exr",
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
@@ -116,7 +116,7 @@ class create_export_node(bpy.types.Operator, ImportHelper):
             self.report({'ERROR'}, "Image is not valid.")
             curr_scene.use_nodes = False
             return{'CANCELLED'}
-        node_image.layer = 'RenderLayer'
+        node_image.layer = 'View Layer'
         image.source = 'SEQUENCE'
         node_image.use_auto_refresh = True
         node_image.frame_duration = frame_max
@@ -286,10 +286,10 @@ class create_export_node(bpy.types.Operator, ImportHelper):
 
         return{'FINISHED'}
 
-class render_normals(bpy.types.Operator):
-    """Render a normal map"""
-    bl_idname = "srti.render_normals"
-    bl_label = "Render Normals"
+class SRTI_OT_export_normals(bpy.types.Operator):
+    """Export a normal map image PNG 16 bit linear."""
+    bl_idname = "srti.export_normals"
+    bl_label = "Export Normals"
     bl_options = {'REGISTER'}
 
     @classmethod
@@ -334,10 +334,10 @@ class render_normals(bpy.types.Operator):
 
         return{'FINISHED'}
 
-class render_composite(bpy.types.Operator):
-    """Render all composite images (! It may take time !)"""
-    bl_idname = "srti.render_composite"
-    bl_label = "Render Composite"
+class SRTI_OT_export_composite(bpy.types.Operator):
+    """Export all composite images. (! It may take time !)"""
+    bl_idname = "srti.export_composite"
+    bl_label = "Export Composite"
     bl_options = {'REGISTER'}
         
     @classmethod
@@ -365,9 +365,9 @@ class render_composite(bpy.types.Operator):
         bpy.ops.render.render("INVOKE_DEFAULT", animation = True, write_still=False)
         return{'FINISHED'}
 
-class reset_nodes(bpy.types.Operator):
-    """Reset workspace deleting nodes"""
-    bl_idname = "srti.reset_nodes"
+class SRTI_OT_delete_nodes(bpy.types.Operator):
+    """Reset compositing workspace deleting all nodes."""
+    bl_idname = "srti.delete_nodes"
     bl_label = "Delete Nodes"
     bl_options = {'REGISTER', 'UNDO' }
 
@@ -378,15 +378,15 @@ class reset_nodes(bpy.types.Operator):
     def execute(self, context):
         #reset all to normal
         curr_scene = context.scene
-        set_render_exr(curr_scene)
+        set_render_exr(context)
         curr_scene.node_tree.nodes.clear()
         curr_scene.render.resolution_percentage = 100
         return{'FINISHED'}
 
-class subdivide_files(bpy.types.Operator):
-    """Reset workspace deleting nodes"""
-    bl_idname = 'srti.subdivide_files'
-    bl_label = 'Subdivide Files'
+class SRTI_OT_subdivide_sets(bpy.types.Operator):
+    """Subdivide rendered and exported images sets in multiple folder, one for each material combination."""
+    bl_idname = 'srti.subdivide_sets'
+    bl_label = 'Subdivide Sets'
     bl_options = {'REGISTER'}
 
     def execute(self, context):
@@ -545,4 +545,7 @@ class subdivide_files(bpy.types.Operator):
                       
             return {'FINISHED'}
 
+
+classes = (SRTI_OT_export_as_lamp, SRTI_OT_create_export_node, SRTI_OT_export_normals, SRTI_OT_export_composite, SRTI_OT_delete_nodes, SRTI_OT_subdivide_sets)
+register, unregister = bpy.utils.register_classes_factory(classes)
 

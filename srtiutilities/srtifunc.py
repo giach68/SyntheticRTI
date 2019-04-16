@@ -4,24 +4,57 @@ import numpy
 import os
 
 ###Various function###
-def create_main(scene):
-    """Create the main object if not already present"""
+def get_srti_collection(scene):
+    """Get SRTI main collection, it create a new one if it does not exist yet."""
+    if 'SRTI' in bpy.data.collections: # check if exist
+        return bpy.data.collections['SRTI']
+    else:
+        new_collection = bpy.data.collections.new('SRTI') #create new collection
+        scene.collection.children.link(new_collection) # Add the new collection to scene
+        return new_collection
+
+def get_camera_collection(scene):
+    """Get camera collection, it create a new one if it does not exist yet."""
+    if 'SRTI_cameras' in bpy.data.collections: # check if exist
+        return bpy.data.collections['SRTI_cameras']
+    else:
+        new_collection = bpy.data.collections.new('SRTI_cameras') #create new collection
+        srti_collection = get_srti_collection(scene) #get SRTI collection
+        srti_collection.children.link(new_collection) # Add the new collection to SRTI collection
+        return new_collection
+
+def get_lights_collection(scene):
+    """Get lights collection, it create a new one if it does not exist yet."""
+    if 'SRTI_lights' in bpy.data.collections: # check if exist
+        return bpy.data.collections['SRTI_lights']
+    else:
+        new_collection = bpy.data.collections.new('SRTI_lights') #create new collection
+        srti_collection = get_srti_collection(scene) #get SRTI collection
+        srti_collection.children.link(new_collection) # Add the new collection to SRTI collection
+        return new_collection
+
+def get_main(scene):
+    """Get main object, it create a new one if it does not exist yet."""
     #Add Empty to parent all lights
-    if not scene.srti_props.C_C_main_parent:
-        main_parent = bpy.data.objects.new(name = "main_parent", object_data = None)
-        scene.objects.link(main_parent)
-        main_parent.empty_draw_type = 'SPHERE'
-        scene.srti_props.C_C_main_parent = main_parent
-        print("--- Create Main: %s."%main_parent.name)
+    if not scene.srti_props.C_C_main_parent: #check if exist
+        main_parent = bpy.data.objects.new(name = "main_parent", object_data = None) #create datablock
+        srti_collection = get_srti_collection(scene) #get SRTI collection
+        srti_collection.objects.link(main_parent) #link main to collection
+        main_parent.empty_display_type = 'SPHERE' #set empty appearance
+        scene.srti_props.C_C_main_parent = main_parent #link object to properties
+        print("--- Create Main: %s."%main_parent.name)    
+    return scene.srti_props.C_C_main_parent
 
 def delete_main(scene):
     """Delete main parent""" 
-    if scene.srti_props.C_C_main_parent:
-        bpy.ops.object.select_all(action='DESELECT')
-        scene.srti_props.C_C_main_parent.select = True #delete the main parent (need revision)
-        scene.srti_props.C_C_main_parent = None
-        bpy.ops.object.delete()
-        file_lines = []
+    if scene.srti_props.C_C_main_parent: #check if exist
+        print("Main found")
+        bpy.ops.object.select_all(action='DESELECT') #deselect all
+        scene.srti_props.C_C_main_parent.select_set(True) #select the main parent
+        scene.srti_props.C_C_main_parent = None #unlink object from properties
+        bpy.ops.object.delete() #delete
+        file_lines = [] #clear file lines
+        bpy.data.collections.remove(bpy.data.collections['SRTI']) #remove SRTI collection
         print("--- Delete Main.")
 
 def check_lamp_cam(scene):
@@ -63,10 +96,12 @@ def update_value_name(self, context):
                 else: #we add .001 at the end of the name
                     elem.name +=".001" #trigger the new update_value_name function
         
-def set_render_exr(scene):
+def set_render_exr(context):
     """Prepare the render setting""" 
+    scene = context.scene
+
     #set cycles as renderer  
-    scene.render.engine = 'CYCLES'
+    scene.render.engine = scene.srti_props.R_O_engine
 
     #set output format
     scene.render.image_settings.file_format = 'OPEN_EXR_MULTILAYER'
@@ -85,7 +120,7 @@ def set_render_exr(scene):
     scene.render.use_overwrite = False
 
     #set render passes
-    curr_rend_layer = scene.render.layers.active
+    curr_rend_layer = context.view_layer
     curr_rend_layer.use_pass_combined = True
     curr_rend_layer.use_pass_z = True
     curr_rend_layer.use_pass_normal = True
@@ -96,6 +131,9 @@ def set_render_exr(scene):
     curr_rend_layer.use_pass_glossy_direct = True
     curr_rend_layer.use_pass_glossy_indirect = True
     curr_rend_layer.use_pass_glossy_color = True
+
+
+    #view_layers["View Layer"].use_pass_combined
   
 def get_export_folder_path(context):
     """Get export folder path. Return empty string if the file is not saved and/or there is no overwrite name"""
@@ -110,3 +148,4 @@ def get_export_name(context):
     if context.scene.srti_props.R_FN_overwrite_name:
         file_name = context.scene.srti_props.R_FN_save_name
     return file_name
+

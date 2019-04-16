@@ -7,10 +7,10 @@ from ..srtifunc import *
 from ..srtiproperties import file_lines as file_lines
 
 ####ANIMATION########
-class animate_all(bpy.types.Operator):
+class SRTI_OT_animate_feature(bpy.types.Operator):
     """Animate all lights, cameras and parameter"""
-    bl_idname = "srti.animate_all"
-    bl_label = "Animate all"
+    bl_idname = "srti.animate_feature"
+    bl_label = "Animate Features"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -37,7 +37,7 @@ class animate_all(bpy.types.Operator):
         val_names = {}
 
         #set renderer to cycle (could be written in a setting file)
-        curr_scene.render.engine = 'CYCLES'
+        curr_scene.render.engine = props.R_O_engine
 
         #Check if objects have been deleted from scene
         #check lamps
@@ -63,7 +63,6 @@ class animate_all(bpy.types.Operator):
         #if no camera and no lamp: delete main
         check_lamp_cam(curr_scene)
 
-
         #generated value
         tot_light = max(len(lamp_list),1) #at least we want to iterate one frame over the camera when there are no lights
         tot_cam = len(camera_list)
@@ -82,7 +81,7 @@ class animate_all(bpy.types.Operator):
             tot_comb = 1
             file_lines.append("image,x_lamp,y_lamp,z_lamp")
         else:
-            #add or update value node to all materials enabling nodes fore each
+            #add or update value node to all materials enabling nodes for each
             #global material_list and delete all animation data
             file_lines.append("image,x_lamp,y_lamp,z_lamp,"+",".join(value.name for value in value_list))
             for material_slot in object.material_slots:
@@ -152,7 +151,7 @@ class animate_all(bpy.types.Operator):
                     val_node.outputs[0].keyframe_insert(data_path = "default_value", frame = curr_frame + 1)
             for cam in camera_list: #loop every camera
                 curr_frame = index_prop*tot_cam*tot_light + index_cam * tot_light + 1
-                mark = curr_scene.timeline_markers.new(cam.camera.name, curr_frame) # create a marker
+                mark = curr_scene.timeline_markers.new(cam.camera.name, frame = curr_frame) # create a marker
                 mark.camera = cam.camera
 
                 if not lamp_list: #create the list when there aren't lights
@@ -168,16 +167,16 @@ class animate_all(bpy.types.Operator):
                     curr_frame = (index_prop * tot_cam * tot_light) + (index_cam * tot_light) + index_light + 1
                     #hide lamp on theprevious and next frame
                     lamp.hide_render = True
-                    lamp.hide = True
+                    lamp.hide_viewport = True
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame - 1)
-                    lamp.keyframe_insert(data_path = 'hide', frame = curr_frame - 1)
+                    lamp.keyframe_insert(data_path = 'hide_viewport', frame = curr_frame - 1)
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame + 1)
-                    lamp.keyframe_insert(data_path = 'hide', frame = curr_frame + 1)
+                    lamp.keyframe_insert(data_path = 'hide_viewport', frame = curr_frame + 1)
                     #rendo visibile la lampada solo nel suo frame
                     lamp.hide_render = False
-                    lamp.hide = False
+                    lamp.hide_viewport = False
                     lamp.keyframe_insert(data_path = 'hide_render', frame = curr_frame)
-                    lamp.keyframe_insert(data_path = 'hide', frame = curr_frame)
+                    lamp.keyframe_insert(data_path = 'hide_viewport', frame = curr_frame)
 
                     #add a line for the files with all the details
                     #filename will be added at export time in create_export_file
@@ -194,15 +193,15 @@ class animate_all(bpy.types.Operator):
             index_cam = 0
             index_prop += 1
 
-        #self.report({'INFO'}, "Animation complete, total frames = %i" % tot_frames)
+        self.report({'INFO'}, "Animation complete, total frames = %i. If there are Values check materials node, you may need to connect the value nodes." % tot_frames)
             
         return{'FINISHED'}
 
 #####RENDERING######
-class render_images(bpy.types.Operator):
-    """Render all images"""
-    bl_idname = "srti.render_images"
-    bl_label = "Set Render"
+class SRTI_OT_set_render_settings(bpy.types.Operator):
+    """Set render path, set .exr MultyLayer output, activate rendering passes, set colorspace to linear (Display device to None)"""
+    bl_idname = "srti.set_render_settings"
+    bl_label = "Set Render Settings"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
@@ -224,16 +223,16 @@ class render_images(bpy.types.Operator):
             curr_scene.render.filepath = "{0}/EXR/{1}-{2}".format(save_dir,file_name,"#"*max_digit)
 
             #set render settings
-            set_render_exr(curr_scene)
+            set_render_exr(context)
             
-            self.report({'INFO'}, "Render output set.")
+            self.report({'INFO'}, "Render settings set.")
 
             return{'FINISHED'}
 
-class create_export_file(bpy.types.Operator):
+class SRTI_OT_create_csv_file(bpy.types.Operator):
     """Create a .csv file with all the images name and parameters"""
-    bl_idname = "srti.create_file"
-    bl_label = "Create file"
+    bl_idname = "srti.create_csv_file"
+    bl_label = "Create .csv File"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -270,3 +269,7 @@ class create_export_file(bpy.types.Operator):
             self.report({'INFO'}, "File %s successfully written."%file_path)
 
             return{'FINISHED'}
+
+
+classes = (SRTI_OT_animate_feature, SRTI_OT_set_render_settings, SRTI_OT_create_csv_file)
+register, unregister = bpy.utils.register_classes_factory(classes)
