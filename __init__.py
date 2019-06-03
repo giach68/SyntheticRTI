@@ -12,7 +12,7 @@ bl_info = {
 
 import bpy
 
-from . import auto_load
+#from . import auto_load
     
 
 from .srtiutilities import srtiproperties
