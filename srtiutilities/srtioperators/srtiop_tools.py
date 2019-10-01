@@ -126,7 +126,7 @@ class SRTI_OT_create_export_node(bpy.types.Operator, ImportHelper):
         node_normal_mult = tree_nodes.new(type = 'CompositorNodeMixRGB')
         node_normal_mult.name = 'SRTI_NORMAL_MULT'
         node_normal_mult.label = 'NORMAL_MULT'
-        node_normal_mult.location = (300,300)
+        node_normal_mult.location = (300,500)
         node_normal_mult.blend_type = 'MULTIPLY'
         node_normal_mult.inputs[0].default_value = 1
         tree_links.new(node_image.outputs['Normal'],node_normal_mult.inputs[1])
@@ -136,11 +136,22 @@ class SRTI_OT_create_export_node(bpy.types.Operator, ImportHelper):
         node_normal_add = tree_nodes.new(type = 'CompositorNodeMixRGB')
         node_normal_add.name = 'SRTI_NORMAL_ADD'
         node_normal_add.label = 'NORMAL_ADD'
-        node_normal_add.location = (480,300)
+        node_normal_add.location = (480,500)
         node_normal_add.blend_type = 'ADD'
         node_normal_add.inputs[0].default_value = 1
         tree_links.new(node_normal_mult.outputs[0],node_normal_add.inputs[1])
         node_normal_add.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
+
+        ##Material Index
+        #divide IndexMA by 65535
+        node_index_div = tree_nodes.new(type = 'CompositorNodeMixRGB')
+        node_index_div.name = 'SRTI_INDEX_DIV'
+        node_index_div.label = 'INDEX_DIV'
+        node_index_div.location = (300,300)
+        node_index_div.blend_type = 'DIVIDE'
+        node_index_div.inputs[0].default_value = 1
+        tree_links.new(node_image.outputs['IndexMA'],node_index_div.inputs[1])
+        node_index_div.inputs[2].default_value = (65535, 65535, 65535, 1)
 
         ##intermediate nodes
         #DIFF
@@ -184,54 +195,36 @@ class SRTI_OT_create_export_node(bpy.types.Operator, ImportHelper):
         tree_links.new(node_image.outputs['GlossCol'],node_inspec.inputs[2])
 
         #DIFF-INDIFF
-        node_diff_indiff = tree_nodes.new(type = 'CompositorNodeMixRGB')
-        node_diff_indiff.name = 'SRTI_DIFF-INDIFF'
-        node_diff_indiff.label = 'DIFF-INDIFF'
-        node_diff_indiff.location = (940,20)
-        node_diff_indiff.blend_type = 'ADD'
-        node_diff_indiff.inputs[0].default_value = 1
-        tree_links.new(node_diff.outputs[0],node_diff_indiff.inputs[1])
-        tree_links.new(node_indiff.outputs[0],node_diff_indiff.inputs[2])
-                
-        #DIFF-SPEC
-        node_diff_spec = tree_nodes.new(type = 'CompositorNodeMixRGB')
-        node_diff_spec.name = 'SRTI_DIFF-SPEC'
-        node_diff_spec.label = 'DIFF-SPEC'
-        node_diff_spec.location = (1100,-60)
-        node_diff_spec.blend_type = 'ADD'
-        node_diff_spec.inputs[0].default_value = 1
-        tree_links.new(node_diff.outputs[0],node_diff_spec.inputs[1])
-        tree_links.new(node_spec.outputs[0],node_diff_spec.inputs[2])
-                
-        #DIFF-SPEC-INDIFF
-        node_diff_spec_indiff = tree_nodes.new(type = 'CompositorNodeMixRGB')
-        node_diff_spec_indiff.name = 'SRTI_DIFF-SPEC-INDIFF'
-        node_diff_spec_indiff.label = 'DIFF-SPEC-INDIFF'
-        node_diff_spec_indiff.location = (1260,-140)
-        node_diff_spec_indiff.blend_type = 'ADD'
-        node_diff_spec_indiff.inputs[0].default_value = 1
-        tree_links.new(node_diff_spec.outputs[0],node_diff_spec_indiff.inputs[1])
-        tree_links.new(node_indiff.outputs[0],node_diff_spec_indiff.inputs[2])
+        node_fiff_c = tree_nodes.new(type = 'CompositorNodeMixRGB')
+        node_fiff_c.name = 'SRTI_DIFF-INDIFF'
+        node_fiff_c.label = 'DIFF-INDIFF'
+        node_fiff_c.location = (940,20)
+        node_fiff_c.blend_type = 'ADD'
+        node_fiff_c.inputs[0].default_value = 1
+        tree_links.new(node_diff.outputs[0],node_fiff_c.inputs[1])
+        tree_links.new(node_indiff.outputs[0],node_fiff_c.inputs[2])
                 
         #DIFF-SPEC-INDIFF-INSPEC
-        node_diff_spec_indiff_inspec = tree_nodes.new(type = 'CompositorNodeMixRGB')
-        node_diff_spec_indiff_inspec.name = 'SRTI_DIFF-SPEC-INDIFF-INSPEC'
-        node_diff_spec_indiff_inspec.label = 'DIFF-SPEC-INDIFF-INSPEC'
-        node_diff_spec_indiff_inspec.location = (1420,-220)
-        node_diff_spec_indiff_inspec.blend_type = 'ADD'
-        node_diff_spec_indiff_inspec.inputs[0].default_value = 1
-        tree_links.new(node_diff_spec_indiff.outputs[0],node_diff_spec_indiff_inspec.inputs[1])
-        tree_links.new(node_inspec.outputs[0],node_diff_spec_indiff_inspec.inputs[2])
+        node_spec_c = tree_nodes.new(type = 'CompositorNodeMixRGB')
+        node_spec_c.name = 'SRTI_DIFF-SPEC-INDIFF-INSPEC'
+        node_spec_c.label = 'DIFF-SPEC-INDIFF-INSPEC'
+        node_spec_c.location = (1420,-220)
+        node_spec_c.blend_type = 'ADD'
+        node_spec_c.inputs[0].default_value = 1
+        tree_links.new(node_spec.outputs[0],node_spec_c.inputs[1])
+        tree_links.new(node_inspec.outputs[0],node_spec_c.inputs[2])
 
         ##Outputs node
         #OUT_NORMAL
         node_out_normal = tree_nodes.new(type = 'CompositorNodeOutputFile')
         node_out_normal.name = 'SRTI_OUT_NORMAL'
-        node_out_normal.label = 'OUT_NORMAL'
-        node_out_normal.location = (660, 300)
+        node_out_normal.label = 'OUT_SINGLE'
+        node_out_normal.location = (660, 400)
         node_out_normal.file_slots.clear()
         node_out_normal.file_slots.new(project_name + "NORMAL-")
         tree_links.new(node_normal_add.outputs[0],node_out_normal.inputs[0])
+        node_out_normal.file_slots.new(project_name + "MATID-")
+        tree_links.new(node_index_div.outputs[0],node_out_normal.inputs[1])
         node_out_normal.base_path = os.path.abspath(folder_path + "\..\PNG")
         node_out_normal.format.file_format = 'PNG'
         node_out_normal.format.color_mode = 'RGB'
@@ -244,18 +237,14 @@ class SRTI_OT_create_export_node(bpy.types.Operator, ImportHelper):
         node_out_composite.label = 'OUT_COMPOSITE'
         node_out_composite.location = (1640, 0)
         node_out_composite.file_slots.clear()
+        node_out_composite.file_slots.new(project_number + "COMB\\"+project_name+"COMB-")
+        tree_links.new(node_image.outputs["Combined"],node_out_composite.inputs[0])
         node_out_composite.file_slots.new(project_number + "DIFF\\"+project_name+"DIFF-")
-        tree_links.new(node_diff.outputs[0],node_out_composite.inputs[0])
-        node_out_composite.file_slots.new(project_number + "DIFF-INDIFF\\"+project_name+"DIFF-INDIFF-")
-        tree_links.new(node_diff_indiff.outputs[0],node_out_composite.inputs[1])
-        node_out_composite.file_slots.new(project_number + "DIFF-SPEC\\"+project_name+"DIFF-SPEC-")
-        tree_links.new(node_diff_spec.outputs[0],node_out_composite.inputs[2])
-        node_out_composite.file_slots.new(project_number + "DIFF-SPEC-INDIFF\\"+project_name+"DIFF-SPEC-INDIFF-")
-        tree_links.new(node_diff_spec_indiff.outputs[0],node_out_composite.inputs[3])
-        node_out_composite.file_slots.new(project_number + "DIFF-SPEC-INDIFF-INSPEC\\"+project_name+"DIFF-SPEC-INDIFF-INSPEC-")
-        tree_links.new(node_diff_spec_indiff_inspec.outputs[0],node_out_composite.inputs[4])
+        tree_links.new(node_fiff_c.outputs[0],node_out_composite.inputs[1])
+        node_out_composite.file_slots.new(project_number + "SPEC\\"+project_name+"SPEC-")
+        tree_links.new(node_spec_c.outputs[0],node_out_composite.inputs[2])
         node_out_composite.file_slots.new(project_number + "SHADOWS\\"+project_name+"SHADOWS-")
-        tree_links.new(node_image.outputs["Shadow"],node_out_composite.inputs[5])
+        tree_links.new(node_image.outputs["Shadow"],node_out_composite.inputs[3])
         node_out_composite.base_path = os.path.abspath(folder_path + "\..\PNG")
         node_out_composite.format.file_format = 'PNG'
         node_out_composite.format.color_mode = 'RGB'
@@ -289,7 +278,7 @@ class SRTI_OT_create_export_node(bpy.types.Operator, ImportHelper):
 class SRTI_OT_export_normals(bpy.types.Operator):
     """Export a normal map image PNG 16 bit linear."""
     bl_idname = "srti.export_normals"
-    bl_label = "Export Normals"
+    bl_label = "Export ID and normals"
     bl_options = {'REGISTER'}
 
     @classmethod
@@ -328,9 +317,6 @@ class SRTI_OT_export_normals(bpy.types.Operator):
         #render normal
         bpy.ops.render.render("INVOKE_DEFAULT")
         #bpy.ops.render.view_cancel()
-        
-        #change normal name
-        #TODO
 
         return{'FINISHED'}
 

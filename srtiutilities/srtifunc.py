@@ -131,6 +131,7 @@ def set_render_exr(context):
     curr_rend_layer.use_pass_glossy_direct = True
     curr_rend_layer.use_pass_glossy_indirect = True
     curr_rend_layer.use_pass_glossy_color = True
+    curr_rend_layer.use_pass_material_index = True
 
 
     #view_layers["View Layer"].use_pass_combined

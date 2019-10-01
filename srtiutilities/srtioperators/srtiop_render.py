@@ -84,9 +84,13 @@ class SRTI_OT_animate_feature(bpy.types.Operator):
             #add or update value node to all materials enabling nodes for each
             #global material_list and delete all animation data
             file_lines.append("image,x_lamp,y_lamp,z_lamp,"+",".join(value.name for value in value_list))
+            if not object.material_slots: # in case object has no material it create a new one   
+                print('-- creating new material')
+                mat = bpy.data.materials.new(name="Material")
+                object.data.materials.append(mat)
+
             for material_slot in object.material_slots:
-                if material_slot.material:
-                    
+                if material_slot.material:  
                     material_slot.material.use_nodes = True
                     material_slot.material.node_tree.animation_data_clear() #delete animation
                     node_list=[]
